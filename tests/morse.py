@@ -1,12 +1,19 @@
 #!/usr/bin/python3
 
+import argparse
 import pigpio
 import time
 import sys
-import fileinput
 
+cmdopt = argparse.ArgumentParser()
+cmdopt.add_argument("-s", type=int, default=25)
+cmdopt.add_argument("-f", type=int, default=500)
+args = cmdopt.parse_args()
+
+# PWM output stuffs
+#
 pwm_out = 18
-pwm_freq = 500
+pwm_freq = args.f
 
 pi = pigpio.pi()
 pi.set_mode(pwm_out, pigpio.OUTPUT)
@@ -23,40 +30,33 @@ def beepfinish() :
     pi.set_PWM_dutycycle(pwm_out, 0)
     pi.stop()
 
-ditlen = 0.05
+
+# speed in words per minute
+#  The word is "PARIS ", which has 50 dot length.
+#
+wpm = args.s
+ditlen = 60/(50*wpm) # dot length in second
 
 # output dot and trailing
 #
 def dit() :
-    #print("=_", end='')
-    sys.stdout.write("=_")
-    sys.stdout.flush()
     beep(ditlen)
     time.sleep(ditlen)
 
 # output dash and trailing
 #
 def dah() :
-    #print("===_", end='')
-    sys.stdout.write("===_")
-    sys.stdout.flush()
     beep(3*ditlen)
     time.sleep(ditlen)
 
 # output space between characters
 #
 def csp() :
-    #print("._", end='')
-    sys.stdout.write("._")
-    sys.stdout.flush()
     time.sleep(2*ditlen)
 
 # output space between words
 #
 def wsp() :
-    #print(",,", end='')
-    sys.stdout.write(",,")
-    sys.stdout.flush()
     time.sleep(2*ditlen)
 
 # function table for dot, dash, and word space
@@ -64,6 +64,12 @@ def wsp() :
 functab = {'.': dit, '-': dah, ' ': wsp}
 
 # table for morse code
+# referring:
+#     ITU-T Recommendation F.1, Operational provisions for the international
+#     public telegram service, Division B, I. Morse code.
+#
+#     ITU-R M.1677-1, International Morse code,
+#     http://www.itu.int/rec/R-REC-M.1677-1-200910-I/, 2009.
 #
 codetab = {'a': ".-",      'b': "-...",    'c': "-.-.",    'd': "-..",     'e': ".",     
            'f': "..-.",    'g': "--.",     'h': "....",    'i': "..",      'j': ".---",  
@@ -107,6 +113,8 @@ def morse(text) :
     concsym  = False
     concword = ''
     for ch in list(text) :
+        sys.stdout.write(ch.upper())
+        sys.stdout.flush()
         if concsym :
             if ch == '}' :
                 chars(concword)
@@ -124,7 +132,7 @@ def morse(text) :
 # main read loop
 #
 try :
-    for line in fileinput.input():
+    for line in sys.stdin :
         morse(line)
 
     beepfinish()
