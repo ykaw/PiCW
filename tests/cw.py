@@ -5,6 +5,7 @@ import time
 import threading
 import readline
 import sys
+import re
 
 # connect to GPIO control daemon (pigpiod)
 #
@@ -17,10 +18,12 @@ if not pi.connected:
 port_dit=23
 port_dah=24
 port_stk=25
+
 def init_gpio_input(port):
     pi.set_mode(port, pigpio.INPUT)
     pi.set_pull_up_down(port, pigpio.PUD_UP)
     pi.set_glitch_filter(port, 3000)
+
 init_gpio_input(port_dit)
 init_gpio_input(port_dah)
 init_gpio_input(port_stk)
@@ -41,19 +44,31 @@ def output_on():
 
 output_off()
 
-# speed in words per minute
-#  The word is "PARIS ", which has 50 dot length.
+# set speed of iambic keying and sendtext()
 #
-wpm=25
-ditlen=60/(50*wpm)
-evt_pressed =0      # port of pressed paddle, 0 means both straight and iambic are idling
+def set_speed(wpm):
+    # speed in words per minute
+    #  The word is "PARIS ", which has 50 dot length.
+    global ditlen
+    ditlen=60/(50*wpm)
+
+# get speed of iambic keying and sendtext()
+# in wpm
+#
+def get_speed():
+    global ditlen
+    return 60/(50*ditlen)
+
+set_speed(25)
 
 # global status and notifying event
 # for iambic paddles
 #
-dit_pressed =False  # current state of dit paddle. True when the paddle is being pressed.
-dah_pressed =False  # current state of dah paddle.
-sqz_paddles=[]     # a queue for squeezed paddle actions.
+dit_pressed =False   # current state of dit paddle. True when the paddle is being pressed.
+dah_pressed =False   # current state of dah paddle.
+sqz_paddles=[]       # a queue for squeezed paddle actions.
+evt_pressed =0       # port of pressed paddle, 0 means both straight and iambic are idling
+evt_terminate=False  # to terminate iambic subthread
 
 # callback function for a straight key
 #
@@ -67,7 +82,7 @@ def cb_stkey(port, level, tick):
     elif level==1:
         evt_pressed=0
         output_off()
- 
+
 # activate cb_stkey callback
 #
 cb_stk=pi.callback(port_stk, pigpio.EITHER_EDGE, cb_stkey)
@@ -87,12 +102,12 @@ def keying_iambic():
     #
     def output_with_squeezed(pressed):
 
-        # send pressed and space
+        # send mark and space
         # by specified durations
         #
-        def mark_and_space(pressed, space):
+        def mark_and_space(mark, space):
             output_on()
-            time.sleep(pressed)
+            time.sleep(mark)
             output_off()
             time.sleep(space)
 
@@ -101,6 +116,8 @@ def keying_iambic():
 
         # alt_paddle is next dit or dah
         # when two paddles are both pressed.
+
+        # send first dit or dah
         #
         if pressed==port_dit:
             alt_paddle=port_dah
@@ -108,6 +125,9 @@ def keying_iambic():
         elif pressed==port_dah:
             alt_paddle=port_dit
             mark_and_space(3*ditlen, ditlen)
+
+        # send trailing dits or dahs, if any
+        #
         while sqz_paddles:
             pressed=sqz_paddles.pop(0)
             if pressed==port_dit:
@@ -116,20 +136,27 @@ def keying_iambic():
             elif pressed==port_dah:
                 alt_paddle=port_dit
                 mark_and_space(3*ditlen, ditlen)
+
         # return next dit or dah
+        #
         return(alt_paddle)
 
-    global evt_pressed
-
     while True:
+        if evt_terminate:
+            return
         # when idling,
         # wait for any paddle will be pressed
         #
         ev.clear()
         ev.wait()
+        if evt_terminate:
+            return
+
+        # either of paddles were pressed
+        #
         alt_paddle=output_with_squeezed(evt_pressed)
 
-        # send all squeezed dits and dahs
+        # either or both paddle(s) are keeping to be pressed
         #
         while True:
             if dit_pressed and dah_pressed:
@@ -140,8 +167,6 @@ def keying_iambic():
                 alt_paddle=output_with_squeezed(port_dah)
             else:
                 break
-
-    evt_pressed=0
 
 # activate iambic subthread
 #
@@ -168,7 +193,8 @@ def cb_iambic(port, level, tick):
             dit_pressed=False
         elif port==port_dah:
             dah_pressed=False
- 
+        evt_pressed=0
+
 # activate cb_iambic callbacks
 #
 cb_dit=pi.callback(port_dit, pigpio.EITHER_EDGE, cb_iambic)
@@ -205,6 +231,7 @@ def wsp() :
 functab = {'.': dit, '-': dah, ' ': wsp}
 
 # table for morse code
+#
 # referring:
 #     ITU-T Recommendation F.1, Operational provisions for the international
 #     public telegram service, Division B, I. Morse code.
@@ -212,15 +239,15 @@ functab = {'.': dit, '-': dah, ' ': wsp}
 #     ITU-R M.1677-1, International Morse code,
 #     http://www.itu.int/rec/R-REC-M.1677-1-200910-I/, 2009.
 #
-codetab = {'a': ".-",      'b': "-...",    'c': "-.-.",    'd': "-..",     'e': ".",     
-           'f': "..-.",    'g': "--.",     'h': "....",    'i': "..",      'j': ".---",  
-           'k': "-.-",     'l': ".-..",    'm': "--",      'n': "-.",      'o': "---",   
-           'p': ".--.",    'q': "--.-",    'r': ".-.",     's': "...",     't': "-",     
-           'u': "..-",     'v': "...-",    'w': ".--",     'x': "-..-",    'y': "-.--",  
-           'z': "--..",                                                                  
-           ' ': " ",                                                                     
-           '0': "-----",   '1': ".----",   '2': "..---",   '3': "...--",   '4': "....-", 
-           '5': ".....",   '6': "-....",   '7': "--...",   '8': "---..",   '9': "----.", 
+codetab = {'a': ".-",      'b': "-...",    'c': "-.-.",    'd': "-..",     'e': ".",
+           'f': "..-.",    'g': "--.",     'h': "....",    'i': "..",      'j': ".---",
+           'k': "-.-",     'l': ".-..",    'm': "--",      'n': "-.",      'o': "---",
+           'p': ".--.",    'q': "--.-",    'r': ".-.",     's': "...",     't': "-",
+           'u': "..-",     'v': "...-",    'w': ".--",     'x': "-..-",    'y': "-.--",
+           'z': "--..",
+           ' ': " ",
+           '0': "-----",   '1': ".----",   '2': "..---",   '3': "...--",   '4': "....-",
+           '5': ".....",   '6': "-....",   '7': "--...",   '8': "---..",   '9': "----.",
            '.': ".-.-.-",  ',': "--..--",  ':': "---...",  '?': "..--..",  "'": ".----.",
            '-': "-....-",  '/': "-..-.",   '(': "-.--.",   ')': "-.--.-",  '"': ".-..-.",
            '=': "-...-",   '+': ".-.-.",   '*': "-..-",    '@': ".--.-."}
@@ -272,17 +299,40 @@ def sendtext(text) :
             else :
                 chars(ch)
 
-# command loop
-#
-try:
-    sendtext("VVV VVV VVV DE JH0NUQ JH0NUQ JH0NUQ")
-    while True:
-        line=input(str(wpm) + ' WPM : ')
-        wpm=float(line)
-        ditlen=60/(50*wpm)
+def cmd_parser(line):
+    if line == 'quit' or line == 'exit':
+        return False
+    if re.match(r"^[0-9.]+$", line):
+        set_speed(float(line))
+    else:
+        sendtext(line)
+    return True
+
+def terminate():
+    global evt_terminate
+
+    # iambic subthread
+    evt_terminate = True
+    ev.set()
+    iambic.join()
+
+    # callbacks
+    cb_stk.cancel()
+    cb_dit.cancel()
+    cb_dah.cancel()
+
+    # pigpio related
     output_off()
     pi.stop()
 
+# console
+#
+try:
+    while True:
+        line=input("\n" + str(get_speed()) + ' WPM : ')
+        if not cmd_parser(line):
+            break
+    terminate()
+
 except (EOFError, KeyboardInterrupt):
-    output_off()
-    pi.stop()
+    terminate()
