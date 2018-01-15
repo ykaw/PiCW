@@ -2,9 +2,7 @@
 
 import pigpio
 import time
-
 import threading
-
 import readline
 
 # initialization of GPIO
@@ -13,15 +11,23 @@ pi=pigpio.pi()
 if not pi.connected:
     exit()
 
+# initialization for GPIO input ports
+#
 port_dit=23
 port_dah=24
+port_stk=25
 pi.set_mode(port_dit, pigpio.INPUT)
 pi.set_mode(port_dah, pigpio.INPUT)
+pi.set_mode(port_stk, pigpio.INPUT)
 pi.set_pull_up_down(port_dit, pigpio.PUD_UP)
 pi.set_pull_up_down(port_dah, pigpio.PUD_UP)
+pi.set_pull_up_down(port_stk, pigpio.PUD_UP)
 pi.set_glitch_filter(port_dit, 3000)
 pi.set_glitch_filter(port_dah, 3000)
+pi.set_glitch_filter(port_stk, 3000)
 
+# initialization for GPIO PWM ports
+#
 port_pwm=18
 pwm_freq= 500
 pi.set_mode(port_pwm, pigpio.OUTPUT)
@@ -29,13 +35,28 @@ pi.hardware_PWM(port_pwm, pwm_freq, 0)
 pi.set_PWM_frequency(port_pwm, pwm_freq)
 pi.set_PWM_dutycycle(port_pwm, 0)
 
-# handlings for dits and dahs
+# speed in words per minute
+#  The word is "PARIS ", which has 50 dot length.
 #
 wpm=20
 ditlen=60/(50*wpm)
 
-# global status
-# and notifying event
+# callback function for a straight key
+#
+def cb_stkey(port, level, tick):
+    # key pressed
+    if level==0:
+        pi.set_PWM_dutycycle(port_pwm, 128)
+    # key released
+    elif level==1:
+        pi.set_PWM_dutycycle(port_pwm, 0)
+ 
+# register callbacks
+#
+cb_stk=pi.callback(port_stk, pigpio.EITHER_EDGE, cb_stkey)
+
+# global status and notifying event
+# for iambic paddles
 #
 dit_mark =False
 dah_mark =False
@@ -97,9 +118,9 @@ def keying_iambic():
 iambic=threading.Thread(target=keying_iambic)
 iambic.start()
 
-# callback function for press/release paddles
+# callback function for iambic paddles
 #
-def cb_func(port, level, tick):
+def cb_iambic(port, level, tick):
     global dit_mark, dah_mark, evt_mark, sqz_marks
     global ev
 
@@ -112,9 +133,7 @@ def cb_func(port, level, tick):
             evt_mark=2
             dah_mark=True
         sqz_marks.append(evt_mark)
-        # notify to iambic subthread
-        ev.set()
-
+        ev.set() # notify to iambic subthread
     # paddle released
     elif level==1:
         if port==port_dit:
@@ -124,8 +143,8 @@ def cb_func(port, level, tick):
  
 # register callbacks
 #
-cb_dit=pi.callback(port_dit, pigpio.EITHER_EDGE, cb_func)
-cb_dah=pi.callback(port_dah, pigpio.EITHER_EDGE, cb_func)
+cb_dit=pi.callback(port_dit, pigpio.EITHER_EDGE, cb_iambic)
+cb_dah=pi.callback(port_dah, pigpio.EITHER_EDGE, cb_iambic)
 
 # command loop
 #
