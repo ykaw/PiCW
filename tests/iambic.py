@@ -51,15 +51,17 @@ def keying_iambic():
         def mark_and_space(mark, space):
             global pi
             global sqz_marks
-            sqz_marks=[]
             pi.set_PWM_dutycycle(port_pwm, 128)
             time.sleep(mark)
             saved_sqz_marks=sqz_marks
             pi.set_PWM_dutycycle(port_pwm, 0)
             time.sleep(space)
             sqz_marks=saved_sqz_marks
+
         global ditlen
         global sqz_marks
+
+        sqz_marks=[]
         if mark==1:
             alt_mark=2
             mark_and_space(ditlen, ditlen)
