@@ -70,8 +70,9 @@ def sendtext(text) :
     for ch in list(text) :
         try:
             if abort:
-                aborttext=False
-                break
+                abort=False
+                active=False
+                return False
             sys.stdout.write(ch.upper())
             sys.stdout.flush()
             if concsym :
@@ -90,9 +91,14 @@ def sendtext(text) :
 
         except KeyboardInterrupt:
             port.space()
-            break
+            abort=False
+            active=False
+            return False
 
+    # normal end ... whole text sent
+    abort=False
     active=False
+    return True
 
 # store abort request
 #
