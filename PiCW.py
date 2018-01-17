@@ -7,7 +7,6 @@
 
 import readline
 import re
-
 import InputOutputPort as port
 import KeyingControl   as key
 import StraightKeyer   as stk
@@ -23,29 +22,45 @@ key.assign(port.In_C, stk.action)
 key.assign(port.In_A, pdl.dot_action)
 key.assign(port.In_B, pdl.dash_action)
 
+# parse console command
+#   return False to end this program
+#
+def cmd_parser(line):
+    if line == 'quit' or line == 'exit':
+        return False
+    else:
+        sendtext(line)
+    return True
+
 # command console
 #
 print("Welcome to picw.py")
 while True:
     try:
         line=input("\n{:.1f}WPM>".format(key.getspeed()))
-    except (EOFError, KeyboardInterrupt):
+    except KeyboardInterrupt:
+        continue
+    except EOFError:
         break
 
     # set speed of Message Keyer and Iambic Keyer
     # in WPM
     #
-    if re.match(r"^[0-9.]+$", line):
+    if re.match(r"[0-9.]+$", line):
         key.setspeed(float(line))
 
     # send text message using MessageKeyer module
     #
-    elif re.match(r"^ .+", line):
+    elif re.match(r" .+", line):
         msg.sendtext(line[1:])
 
     # other stuff ignored
     #
-    else:
-        pass # (more command required for the future)
+    elif not cmd_parser(line):
+        break
 
-# (termination process required)
+# termination process
+pdl.terminate()
+port.terminate()
+print()
+print("Bye bye...")

@@ -70,7 +70,10 @@ def cspc() :
 def wspc() :
     sendspace(2*dotlen)
 
-# assign callback function to port
+# assign callback function to input port
 #
 def assign(in_port, func):
-    port.cb[in_port] = port.pi.callback(in_port, pigpio.EITHER_EDGE, func)
+    if in_port in port.cb:
+        port.cb[in_port].cancel()  #  unassign current callback if any
+    
+    port.cb[in_port]=port.pi.callback(in_port, pigpio.EITHER_EDGE, func)

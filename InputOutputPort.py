@@ -47,3 +47,17 @@ def space():
 #   empty at initial state
 #
 cb={}
+
+# termination process for this module
+#
+def terminate():
+    space()
+
+    # remove all callbacks
+    #
+    for port in cb.keys():
+        cb[port].cancel()
+
+    # close connection to pigpiod
+    #
+    pi.stop()

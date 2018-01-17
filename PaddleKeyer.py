@@ -62,6 +62,9 @@ def keying_iambic():
         #
         return(alt_paddle)
 
+    global ev_terminate
+    ev_terminate=False
+
     while True:
         # when idling,
         # wait for any paddle will be pressed
@@ -69,7 +72,12 @@ def keying_iambic():
         ev.clear()
         ev.wait()
 
-        # abort message keyer if running
+        # terminate this thread if requested
+        #
+        if ev_terminate:
+            return
+
+        # request abort to message keyer
         #
         if msg.active:
             msg.aborttext()
@@ -96,7 +104,15 @@ def keying_iambic():
 iambic=threading.Thread(target=keying_iambic)
 iambic.start()
 
-# callback function for iambic paddles
+# terminate iambic subthread
+#
+def terminate():
+    global ev_terminate
+    ev_terminate=True
+    ev.set()
+    iambic.join()
+
+# callback function for iambic dot paddle
 #
 def dot_action(port, level, tick):
     global dot_pressed, dash_pressed, evt_pressed, sqz_paddles
@@ -112,6 +128,8 @@ def dot_action(port, level, tick):
         dot_pressed=False
         evt_pressed=PADDLE_NONE
 
+# callback function for iambic dash paddle
+#
 def dash_action(port, level, tick):
     global dot_pressed, dash_pressed, evt_pressed, sqz_paddles
 

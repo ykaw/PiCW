@@ -1,7 +1,8 @@
 # MessageKeyer - encode text string to morse keying
 
 import sys
-import KeyingControl as key
+import InputOutputPort as port
+import KeyingControl   as key
 
 # function table for dot, dash, and word space
 #
@@ -60,35 +61,41 @@ abort=False   # true if abort requested by other keyer
 #
 def sendtext(text) :
     global active, abort
-    abort = False
+    abort=False
 
-    concsym  = False
-    concword = ''
+    concsym =False
+    concword=''
 
     active = True
     for ch in list(text) :
-        if abort:
-            aborttext=False
+        try:
+            if abort:
+                aborttext=False
+                break
+            sys.stdout.write(ch.upper())
+            sys.stdout.flush()
+            if concsym :
+                if ch == '}' :
+                    chars(concword)
+                    concsym =False
+                    concword=''
+                else :
+                    concword=concword + ch
+            else :
+                if ch == '{' :
+                    concsym =True
+                    concword=''
+                else :
+                    chars(ch)
+
+        except KeyboardInterrupt:
+            port.space()
             break
-        sys.stdout.write(ch.upper())
-        sys.stdout.flush()
-        if concsym :
-            if ch == '}' :
-                chars(concword)
-                concsym  = False
-                concword = ''
-            else :
-                concword = concword + ch
-        else :
-            if ch == '{' :
-                concsym  = True
-                concword = ''
-            else :
-                chars(ch)
-    active = False
+
+    active=False
 
 # store abort request
 #
 def aborttext():
     global abort
-    abort = True
+    abort=True
