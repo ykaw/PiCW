@@ -33,16 +33,28 @@ def getspeed():
 #
 setspeed(25)
 
+# mark is the state when the transmission line is active.
+#
+def mark():
+    port.txline_on()
+    port.beep_on()
+
+# space is the state when the transmission line is inactive.
+#
+def space():
+    port.txline_off()
+    port.beep_off()
+
 # make transmission line active for sec
 #
 def sendmark(sec):
-    port.mark()
+    mark()
     time.sleep(sec)
 
 # make transmission line inactive for sec
 #
 def sendspace(sec):
-    port.space()
+    space()
     time.sleep(sec)
 
 # send a pair of dot and trailing gap
@@ -77,3 +89,16 @@ def assign(in_port, func):
         port.cb[in_port].cancel()  #  unassign current callback if any
     
     port.cb[in_port]=port.pi.callback(in_port, pigpio.EITHER_EDGE, func)
+
+# termination process
+#
+def terminate():
+    # unassign all callbacks
+    #
+    for in_port in port.cb.keys():
+        if in_port in port.cb:
+            port.cb[in_port].cancel()
+
+    # line level to be off
+    #
+    space()

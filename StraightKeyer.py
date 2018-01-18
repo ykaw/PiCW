@@ -14,6 +14,10 @@ def action(in_port, state, tick):
         if msg.active:
             msg.aborttext() # abort message keyer if active
         else:
-            port.mark()
+            key.mark()
     elif state==key.RELEASED:
-        port.space()
+        key.space()
+
+# Initial port assignment
+#
+key.assign(port.In_C, action)

@@ -7,26 +7,30 @@
 
 import readline
 import re
+import sys
 import InputOutputPort as port
 import KeyingControl   as key
 import StraightKeyer   as stk
 import PaddleKeyer     as pdl
 import MessageKeyer    as msg
+import CwUtilities     as utl
 
-# setup for Straight Key
+# transmit keyborad input directly
 #
-key.assign(port.In_C, stk.action)
-
-# setup for Paddle Key
-#
-key.assign(port.In_A, pdl.dot_action)
-key.assign(port.In_B, pdl.dash_action)
+def keyboard_send():
+    while True:
+        try:
+            ch=utl.getc()
+            if ch=='x':
+                break
+            msg.sendtext(ch)
+        except (KeyboardInterrupt, EOFError):
+            break
 
 # display command help
 #
 def cmd_help():
-    print('''
-PiCW.py command help:
+    print('''PiCW.py command help:
 
   "wpm", "cpm" ... set speed unit to words/minute
 
@@ -39,7 +43,7 @@ PiCW.py command help:
                    example: ">>>>" means "1.05*1.05*1.05*1.05", 1.216 (22% up)
                             "<<"   means "1/(1.05*1.05)",  0.907 (10% down)
 
-  "iambic", "reverse-iambic", "bug", "reverse-bug", "sidewiper"
+  "iambic", "reverse-iambic", "bug", "reverse-bug", "sideswiper"
             ... set paddle action
                 "reverse-*" will swap paddles as normal
   space + string
@@ -52,8 +56,7 @@ PiCW.py command help:
 
 Note:
     Message keyer will be aborted by typing Ctrl-D
-    or by pressing a straight key or any paddle lever.
-'''[:-1])
+    or by pressing a straight key or any paddle lever.'''[:-1])
 
 # parse console command
 #   return False to end this program
@@ -78,11 +81,15 @@ def cmd_parser(line):
     elif line == 'reverse-bug':
         key.assign(port.In_A, stk.action)
         key.assign(port.In_B, pdl.dot_action)
-    elif line == 'sidewiper':
+    elif line == 'sideswiper':
         key.assign(port.In_A, stk.action)
         key.assign(port.In_B, stk.action)
+    elif line == 'kb':
+        keyboard_send()
     elif line == '?':
         cmd_help()
+    else:
+        print("Eh? :", line)
     return True
 
 # command console
@@ -127,6 +134,7 @@ while True:
 
 # termination process
 pdl.terminate()
+key.terminate()
 port.terminate()
 print()
 print("Bye bye...")

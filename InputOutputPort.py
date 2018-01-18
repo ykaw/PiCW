@@ -33,14 +33,24 @@ pi.set_mode(Out_M, pigpio.OUTPUT)
 pi.hardware_PWM(Out_M, Freq_M, 0)
 pi.set_PWM_frequency(Out_M, Freq_M)
 
-# mark is the state when the transmission line is active.
+# activate TX control line
 #
-def mark():
+def txline_on():
+    pass # not implemented yet
+
+# deactivate TX control line
+#
+def txline_off():
+    pass # not implemented yes
+
+# activate side tone
+#
+def beep_on():
     pi.set_PWM_dutycycle(Out_M, 128)
 
-# mark is the state when the transmission line is inactive.
+# deacitivate side tone
 #
-def space():
+def beep_off():
     pi.set_PWM_dutycycle(Out_M, 0)
 
 # table for callback functions by every input port
@@ -51,12 +61,6 @@ cb={}
 # termination process for this module
 #
 def terminate():
-    space()
-
-    # remove all callbacks
-    #
-    for port in cb.keys():
-        cb[port].cancel()
 
     # close connection to pigpiod
     #

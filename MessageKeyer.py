@@ -90,7 +90,7 @@ def sendtext(text) :
                     chars(ch)
 
         except KeyboardInterrupt:
-            port.space()
+            key.space()
             abort=False
             active=False
             return False

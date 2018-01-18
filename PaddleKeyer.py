@@ -143,3 +143,8 @@ def dash_action(port, level, tick):
     elif level==1:
         dash_pressed=False
         evt_pressed=PADDLE_NONE
+
+# Initial port assignments
+#
+key.assign(port.In_A, dot_action)
+key.assign(port.In_B, dash_action)
