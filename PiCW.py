@@ -7,7 +7,6 @@
 
 import readline
 import re
-import sys
 import InputOutputPort as port
 import KeyingControl   as key
 import StraightKeyer   as stk
@@ -15,17 +14,25 @@ import PaddleKeyer     as pdl
 import MessageKeyer    as msg
 import CwUtilities     as utl
 
+# change speed interactively
+#
+def speed():
+    def checkfunc(ch):
+        import sys
+        if ch=='>':
+            key.setspeed(1.05*key.getspeed())
+        elif ch=='<':
+            key.setspeed(key.getspeed()/1.05)
+        msg.sendtext('VVV ')
+
+    utl.with_keytyping(checkfunc,
+                       lambda ch : ch == '$')
+
 # transmit keyborad input directly
 #
 def keyboard_send():
-    while True:
-        try:
-            ch=utl.getc()
-            if ch=='x':
-                break
-            msg.sendtext(ch)
-        except (KeyboardInterrupt, EOFError):
-            break
+    utl.with_keytyping(msg.sendtext,
+                       lambda ch : ch == '$')
 
 # display command help
 #
@@ -86,6 +93,8 @@ def cmd_parser(line):
         key.assign(port.In_B, stk.action)
     elif line == 'kb':
         keyboard_send()
+    elif line == 'speed':
+        speed()
     elif line == '?':
         cmd_help()
     else:
