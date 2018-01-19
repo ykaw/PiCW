@@ -15,7 +15,6 @@ key.setspeed(args.s)
 # termination process
 #
 def terminate():
-    key.terminate()
     port.terminate()
     print()
     print("Bye bye...")
@@ -24,7 +23,10 @@ def terminate():
 #
 try :
     for line in sys.stdin :
-        msg.sendtext(line)
+        if not msg.sendtext(line):
+            break
+
     terminate()
+
 except KeyboardInterrupt :
     terminate()

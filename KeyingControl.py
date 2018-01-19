@@ -27,6 +27,9 @@ def wpm2sec(speed):
 #
 def setspeed(speed):
     global wpm, dotlen
+    if not speed:
+        return # even speed is 0
+
     if 0.0<speed and speed<=100.0:
         wpm=speed
         dotlen=wpm2sec(wpm)

@@ -2,6 +2,7 @@
 
 import re
 import sys
+import random; random.seed()
 import InputOutputPort as port
 import KeyingControl   as key
 import StraightKeyer   as stk
@@ -95,6 +96,29 @@ def keyboard_send(act=None):
                        lambda ch : ch == '$')
     return True
 
+# training mode
+#
+def training(act=None):
+    chars='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    #chars='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ()-.,:"+=/'
+
+    msg.sendtext('          ')
+    print()
+    msg.sendtext('HR HR = ')
+    print()
+    for line in range(10):
+        for word in range(12):
+            for char in range(5):
+                if not msg.sendtext(random.choice(chars)):
+                    print()
+                    return True
+            msg.sendtext(' ')
+        print()
+    msg.sendtext('+')
+    print()
+
+    return True
+
 def bye(act=None):
     return False
 
@@ -105,6 +129,7 @@ cmds={'TX':       txline,
       'STRAIGHT': straight,
       'PADDLE':   paddle,
       'KB':       keyboard_send,
+      'TRAINING': training,
       'BYE':      bye,
       'EXIT':     bye,
       'QUIT':     bye}

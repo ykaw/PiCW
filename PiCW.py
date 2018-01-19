@@ -8,6 +8,7 @@
 import readline
 import re
 import InputOutputPort as port
+import KeyingControl   as key
 import PaddleKeyer     as pdl
 import MessageKeyer    as msg
 import CwUtilities     as utl
@@ -62,7 +63,7 @@ while True:
     # set speed of Message Keyer and Iambic Keyer
     # in WPM
     #
-    if re.match(r"[0-9.]+$", line):
+    if re.match(r"[0-9.]+", line):
         key.setspeed(utl.speed2float(line))
 
     # change speed by +/- 5%

@@ -51,26 +51,20 @@ def chars(chrs) :
             key.wspc()
     key.cspc()
 
-# statuses for abort sending
-#
-active=False  # true if sending
-abort=False   # true if abort requested by other keyer
-
 # send string as a morse code
 # ... substring such as {BT} represents concatenated symbol
 #
 def sendtext(text) :
     global active, abort
-    abort=False
 
     concsym =False
     concword=''
 
+    abort=False
     active = True
     for ch in list(text) :
         try:
             if abort:
-                abort=False
                 active=False
                 return False
             sys.stdout.write(ch.upper())
@@ -91,14 +85,17 @@ def sendtext(text) :
 
         except KeyboardInterrupt:
             key.space()
-            abort=False
             active=False
             return False
 
-    # normal end ... whole text sent
-    abort=False
+    # all text sent
     active=False
-    return True
+    return not abort
+
+# statuses for abort sending
+#
+active=False  # true if sending
+abort=False   # true if abort requested by other keyer
 
 # store abort request
 #

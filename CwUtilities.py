@@ -35,6 +35,6 @@ def speedstr():
 #
 def speed2float(speed):
     if disp_cpm:
-        float(speed)/5.0
+        return float(speed)/5.0
     else:
-        float(speed)
+        return float(speed)
