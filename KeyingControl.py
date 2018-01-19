@@ -68,25 +68,31 @@ def sendspace(sec):
 
 # send a pair of dot and trailing gap
 #
-def dot() :
+def dot():
     sendmark(dotlen)
     sendspace(dotlen)
 
 # send a pair of dash and trailing gap
 #
-def dash() :
+def dash():
     sendmark(3.0*dotlen)
     sendspace(dotlen)
 
 # send space between characters
 #   dot/dash | gap(1) | cspc(2) | dot/dash
 #            |<-----3 dots----->|
-def cspc() :
+def cspc():
     sendspace(2*dotlen)
 
 # output space between words
 #   dot/dash | gap(1) | cspc(2) | wspc(2) | cspc(2) | dot/dash
 #            |<---------------7 dots--------------->|
 #
-def wspc() :
+def wspc():
     sendspace(2*dotlen)
+
+# callback function to do nothing
+#
+def null_action(port):
+    if msg.active:
+        msg.abort_request() # abort message keyer if active

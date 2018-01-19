@@ -7,9 +7,6 @@ import MessageKeyer    as msg
 # callback function
 #
 def action(state):
-    if not actstat:
-        return
-
     # almost pass-through
     #
     if state==key.PRESSED:
@@ -19,6 +16,13 @@ def action(state):
             key.mark()
     elif state==key.RELEASED:
         key.space()
+
+
+# callback function to do nothing
+#
+def null_action(port):
+    if msg.active:
+        msg.abort_request() # abort message keyer if active
 
 # initialization
 #
@@ -33,7 +37,7 @@ def setaction(newact):
         if actstat:
             port.bind(port.In_C, action)
         else:
-            port.bind(port.In_C, port.null_action)
+            port.bind(port.In_C, null_action)
 
 actstat=False  # current status
 setaction(True)

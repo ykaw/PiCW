@@ -5,6 +5,7 @@ import sys
 import InputOutputPort as port
 import KeyingControl   as key
 import StraightKeyer   as stk
+import PaddleKeyer     as pdl
 import MessageKeyer    as msg
 import CwUtilities     as utl
 
@@ -14,6 +15,7 @@ import CwUtilities     as utl
 # straight [off|on]
 # kb
 # send <file name>
+# lesson
 # show
 # unit [wpm|cpm]
 # quit, exit, bye
@@ -45,6 +47,30 @@ def straight(act=None):
     stk.setaction(togglecmd(act, 'straight key', stk.getaction()))
     return True
 
+def paddle(type=None):
+    def settype(act_A, act_B):
+        port.bind(port.In_A, act_A)
+        port.bind(port.In_B, act_B)
+
+    if type==None:
+        return True
+
+    type=type.upper()
+    if type=='OFF':
+        settype(stk.null_action, stk.null_action)
+    elif type=='IAMBIC':
+        settype(pdl.dot_action,  pdl.dash_action)
+    elif type=='IAMBIC-REV':
+        settype(pdl.dash_action, pdl.dot_action)
+    elif type=='BUG':
+        settype(pdl.dot_action,  stk.action)
+    elif type=='BUG-REV':
+        settype(stk.action,      pdl.dot_action)
+    elif type=='SIDESWIPER':
+        settype(stk.action,      stk.action)
+
+    return True
+
 # transmit keyborad input directly
 # change speed interactively
 #
@@ -61,8 +87,13 @@ def keyboard_send(act=None):
         else:
             msg.sendtext(ch)
 
+    print("entering keyboard transmission mode...")
+    print("    Type '$' to exit this mode.")
+    print("    Type '<' to decrease transmission speed by 5%, '>' to increase respectively.")
+
     utl.with_keytyping(charfunc,
                        lambda ch : ch == '$')
+    return True
 
 def bye(act=None):
     return False
@@ -72,6 +103,7 @@ def bye(act=None):
 cmds={'TX':       txline,
       'BEEP':     beep,
       'STRAIGHT': straight,
+      'PADDLE':   paddle,
       'KB':       keyboard_send,
       'BYE':      bye,
       'EXIT':     bye,
@@ -80,10 +112,13 @@ cmds={'TX':       txline,
 # command line parser
 #
 def parser(line):
-    params=re.findall(r"[0-9A-Za-z]+", line)
-    cmd=params.pop(0).upper()
-    if cmd in cmds.keys():
-        return cmds[cmd](*params)
+    params=re.findall(r"[^ 	]+", line)
+    if params:
+        cmd=params.pop(0).upper()
+        if cmd in cmds.keys():
+            return cmds[cmd](*params)
+        else:
+            print("Eh?")
+            return True
     else:
-        print("Eh?")
         return True

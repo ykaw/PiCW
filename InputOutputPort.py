@@ -85,11 +85,6 @@ def bind(in_port, func):
 
     cb[in_port]=pi.callback(in_port, pigpio.EITHER_EDGE, lambda p, s, t: func(s))
 
-# callback function to do nothing
-#
-def null_action(port):
-    pass
-
 # termination process for this module
 #
 def terminate():
