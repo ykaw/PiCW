@@ -10,6 +10,11 @@ import InputOutputPort as port
 PRESSED =0
 RELEASED=1
 
+# control status for output
+#
+tx_enable  =True
+beep_enable=True
+
 # convert wpm to duration of a dot (sec)
 #
 def wpm2sec(speed):
@@ -36,14 +41,18 @@ setspeed(25)
 # mark is the state when the transmission line is active.
 #
 def mark():
-    port.txline_on()
-    port.beep_on()
+    if tx_enable:
+        port.txline_on()
+    if beep_enable:
+        port.beep_on()
 
 # space is the state when the transmission line is inactive.
 #
 def space():
-    port.txline_off()
-    port.beep_off()
+    if tx_enable:
+        port.txline_off()
+    if beep_enable:
+        port.beep_off()
 
 # make transmission line active for sec
 #
