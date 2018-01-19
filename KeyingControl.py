@@ -81,24 +81,3 @@ def cspc() :
 #
 def wspc() :
     sendspace(2*dotlen)
-
-# assign callback function to input port
-#
-def assign(in_port, func):
-    if in_port in port.cb:
-        port.cb[in_port].cancel()  #  unassign current callback if any
-    
-    port.cb[in_port]=port.pi.callback(in_port, pigpio.EITHER_EDGE, func)
-
-# termination process
-#
-def terminate():
-    # unassign all callbacks
-    #
-    for in_port in port.cb.keys():
-        if in_port in port.cb:
-            port.cb[in_port].cancel()
-
-    # line level to be off
-    #
-    space()

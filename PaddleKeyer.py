@@ -5,24 +5,26 @@ import InputOutputPort as port
 import KeyingControl   as key
 import MessageKeyer    as msg
 
-PADDLE_NONE=0
+# states of a paddle
+#
+PADDLE_NONE=0 # unknown
 PADDLE_DOT =1
 PADDLE_DASH=2
 
 # global status and notifying event
 # for iambic paddles
 #
-dot_pressed =False       # current state of dot paddle. True when the paddle is being pressed.
-dash_pressed =False      # current state of dash paddle.
-sqz_paddles=[]           # a queue for squeezed paddle actions.
-evt_pressed =PADDLE_NONE # port of pressed paddle
-                         # PADDLE_NONE means both straight and iambic are idling
+dot_pressed =False        # current state of dot paddle. True when the paddle is being pressed.
+dash_pressed=False        # current state of dash paddle.
+sqz_paddles =[]           # a queue for squeezed paddle actions.
+evt_pressed =PADDLE_NONE  # port of pressed paddle
+                          # PADDLE_NONE means both straight and iambic are idling
 
 # this event object is used to notify any paddle pressed
 # from the iambic callback function
 # to iambic keying subthread
 #
-ev=threading.Event()
+ev_pressed=threading.Event()
 
 # subthread for iambic output
 #
@@ -69,8 +71,8 @@ def keying_iambic():
         # when idling,
         # wait for any paddle will be pressed
         #
-        ev.clear()
-        ev.wait()
+        ev_pressed.clear()
+        ev_pressed.wait()
 
         # terminate this thread if requested
         #
@@ -80,7 +82,7 @@ def keying_iambic():
         # request abort to message keyer
         #
         if msg.active:
-            msg.aborttext()
+            msg.abort_request()
             continue
 
         # either of paddles were pressed
@@ -99,52 +101,55 @@ def keying_iambic():
             else:
                 break
 
-# activate iambic subthread
-#
-iambic=threading.Thread(target=keying_iambic)
-iambic.start()
-
-# terminate iambic subthread
-#
-def terminate():
-    global ev_terminate
-    ev_terminate=True
-    ev.set()
-    iambic.join()
-
 # callback function for iambic dot paddle
 #
-def dot_action(port, level, tick):
+def dot_action(state):
     global dot_pressed, dash_pressed, evt_pressed, sqz_paddles
 
     # paddle pressed
-    if level==0:
+    if state==key.PRESSED:
         dot_pressed=True
         evt_pressed=PADDLE_DOT
         sqz_paddles.append(evt_pressed)
-        ev.set() # notify to iambic subthread
+        ev_pressed.set() # notify to iambic subthread
     # paddle released
-    elif level==1:
+    elif state==key.RELEASED:
         dot_pressed=False
         evt_pressed=PADDLE_NONE
 
 # callback function for iambic dash paddle
 #
-def dash_action(port, level, tick):
+def dash_action(state):
     global dot_pressed, dash_pressed, evt_pressed, sqz_paddles
 
     # paddle pressed
-    if level==0:
+    if state==key.PRESSED:
         dash_pressed=True
         evt_pressed=PADDLE_DASH
         sqz_paddles.append(evt_pressed)
-        ev.set() # notify to iambic subthread
+        ev_pressed.set() # notify to iambic subthread
     # paddle released
-    elif level==1:
+    elif state==key.RELEASED:
         dash_pressed=False
         evt_pressed=PADDLE_NONE
 
-# Initial port assignments
+# initial port bindings
 #
-key.assign(port.In_A, dot_action)
-key.assign(port.In_B, dash_action)
+port.bind(port.In_A, dot_action)
+port.bind(port.In_B, dash_action)
+
+# activate iambic subthread
+#
+iambic=threading.Thread(target=keying_iambic)
+iambic.start()
+
+# terminate process
+#
+def terminate():
+    global ev_terminate
+
+    # terminate iambic subthread
+    #
+    ev_terminate=True
+    ev_pressed.set()
+    iambic.join()

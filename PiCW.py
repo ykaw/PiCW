@@ -77,20 +77,20 @@ def cmd_parser(line):
     elif line == 'wpm':
         prompt_cpm=False
     elif line == 'iambic':
-        key.assign(port.In_A, pdl.dot_action)
-        key.assign(port.In_B, pdl.dash_action)
+        port.bind(port.In_A, pdl.dot_action)
+        port.bind(port.In_B, pdl.dash_action)
     elif line == 'reverse-iambic':
-        key.assign(port.In_A, pdl.dash_action)
-        key.assign(port.In_B, pdl.dot_action)
+        port.bind(port.In_A, pdl.dash_action)
+        port.bind(port.In_B, pdl.dot_action)
     elif line == 'bug':
-        key.assign(port.In_A, pdl.dot_action)
-        key.assign(port.In_B, stk.action)
+        port.bind(port.In_A, pdl.dot_action)
+        port.bind(port.In_B, stk.action)
     elif line == 'reverse-bug':
-        key.assign(port.In_A, stk.action)
-        key.assign(port.In_B, pdl.dot_action)
+        port.bind(port.In_A, stk.action)
+        port.bind(port.In_B, pdl.dot_action)
     elif line == 'sideswiper':
-        key.assign(port.In_A, stk.action)
-        key.assign(port.In_B, stk.action)
+        port.bind(port.In_A, stk.action)
+        port.bind(port.In_B, stk.action)
     elif line == 'kb':
         keyboard_send()
     elif line == 'speed':
@@ -143,7 +143,6 @@ while True:
 
 # termination process
 pdl.terminate()
-key.terminate()
 port.terminate()
 print()
 print("Bye bye...")

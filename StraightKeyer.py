@@ -6,18 +6,18 @@ import MessageKeyer    as msg
 
 # callback function
 #
-def action(in_port, state, tick):
+def action(state):
 
     # almost pass-through
     #
     if state==key.PRESSED:
         if msg.active:
-            msg.aborttext() # abort message keyer if active
+            msg.abort_request() # abort message keyer if active
         else:
             key.mark()
     elif state==key.RELEASED:
         key.space()
 
-# Initial port assignment
+# initial port binding
 #
-key.assign(port.In_C, action)
+port.bind(port.In_C, action)

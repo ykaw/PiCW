@@ -102,6 +102,6 @@ def sendtext(text) :
 
 # store abort request
 #
-def aborttext():
+def abort_request():
     global abort
     abort=True
