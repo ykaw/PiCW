@@ -9,6 +9,7 @@ import KeyingControl   as key
 import StraightKeyer   as stk
 import PaddleKeyer     as pdl
 import TextKeyer       as txt
+import MemoryKeyer     as mem
 import CwUtilities     as utl
 
 # function for toggling status - on and off
@@ -106,6 +107,28 @@ def keyboard_send(act=None):
                        lambda ch : ch == '$' or ch == "\x1b")
     return True
 
+# start/stop to record keying
+#
+def record(act=None):
+    if act==None:
+        print('Keying is ', '' if mem.recording else 'not ', 'being recorded.', sep='')
+        return True
+
+    if act.upper()=='ON':
+        print('record of keying started...')
+        mem.recstart()
+    elif act.upper()=='OFF':
+        print('record of keying stopped...')
+        mem.recstop()
+
+    return True
+
+# replay recorded keying
+#
+def play(act=None):
+    mem.replay()
+    return True
+
 # transmit the contents of file
 #
 def xmit_file(filename=None):
@@ -162,6 +185,7 @@ def show(act=None):
     print('                  Side tone:', 'ON' if key.beep_enable else 'OFF', ', freq', port.get_beepfreq(), 'Hz')
     print('               Straight key:', 'ON' if stk.getaction else 'OFF')
     print('              Paddle action:', paddletype)
+    print('              Record keying:', 'ON' if mem.recording else 'OFF')
     return True
 
 # toggle speed unit
@@ -234,6 +258,10 @@ kb                  :  enter keyboard transmit mode
 
 xmit <file_name>    :  transmit contets of text file
 
+recording [off|on]  :  start/stop record of keying
+
+play                :  replay recorded keying
+
 training            :  start training mode
                        transmit randomly-generated 100 words
 
@@ -266,15 +294,15 @@ number   : set speed                   |
 " "text  : transmit text directly      |
                                        |
                                        |
-tx [off|on]        : TX control line   |show               : display settings
-beep [off|on|freq] : side tone         |speed              : toggle WPM/CPM
-straight [off|on]  : straight key      |load <file_name>   : load config
-paddle [off|iambic|iambic-rev|         |help               : display help
-        bug|bug-rev|sideswiper]        |?                  : display this
-                   : paddle action     |quit, exit, bye    : exit from PiCW.py
-kb                 : keyboard transmit |
-xmit <file_name>   : file transmit     |
-training           : training mode     |
+tx [off|on]        : TX control line   |play               : replay keying
+beep [off|on|freq] : side tone         |training           : training mode
+straight [off|on]  : straight key      |show               : display settings
+paddle [off|iambic|iambic-rev|         |speed              : toggle WPM/CPM
+        bug|bug-rev|sideswiper]        |load <file_name>   : load config
+                   : paddle action     |help               : display help
+kb                 : keyboard transmit |?                  : display this
+xmit <file_name>   : file transmit     |quit, exit, bye    : exit from PiCW.py
+record [on|off]    : record keying     |
                                        |
 ==========================================[ Type 'help' for more details ]====='''[:-1])
 
@@ -295,6 +323,8 @@ cmds={'TX':       txline,
       'PADDLE':   paddle,
       'KB':       keyboard_send,
       'XMIT':     xmit_file,
+      'RECORD':   record,
+      'PLAY':     play,
       'TRAINING': training,
       'SHOW':     show,
       'SPEED':    speed,

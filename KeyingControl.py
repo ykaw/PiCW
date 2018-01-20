@@ -3,6 +3,7 @@
 import time
 import pigpio
 import InputOutputPort as port
+import MemoryKeyer     as mem
 
 # key/paddle status
 #   for callback functions
@@ -40,6 +41,9 @@ def getspeed():
 # mark is the state when the transmission line is active.
 #
 def mark():
+    if mem.recording:
+        mem.tstamp.append(time.time())
+        mem.keystat.append(PRESSED)
     if tx_enable:
         port.txline_on()
     if beep_enable:
@@ -48,6 +52,9 @@ def mark():
 # space is the state when the transmission line is inactive.
 #
 def space():
+    if mem.recording:
+        mem.tstamp.append(time.time())
+        mem.keystat.append(RELEASED)
     if tx_enable:
         port.txline_off()
     if beep_enable:
