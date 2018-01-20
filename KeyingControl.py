@@ -37,10 +37,6 @@ def setspeed(speed):
 def getspeed():
     return wpm
 
-# set initial speed at default
-#
-setspeed(25)
-
 # mark is the state when the transmission line is active.
 #
 def mark():
@@ -94,8 +90,7 @@ def cspc():
 def wspc():
     sendspace(2*dotlen)
 
-# callback function to do nothing
+# initialization
 #
-def null_action(port):
-    if msg.active:
-        msg.abort_request() # abort message keyer if active
+setspeed(18)
+port.set_beepfreq(800)

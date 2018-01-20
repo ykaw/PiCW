@@ -31,11 +31,13 @@ for port in [In_A, In_B, In_C]:
     #
     GPIO.setup(port, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-# and initialization of output ports
+# initialization of TX control line
 #
 GPIO.setup(Out_T, GPIO.OUT)
 
-Freq_M=500 # side tone frequency (Hz)
+# initialization of side tone
+#
+Freq_M=1500 # side tone frequency (Hz)
 GPIO.setup(Out_M, GPIO.OUT)
 pwm=GPIO.PWM(Out_M, Freq_M)
 pwm.start(0)
@@ -60,6 +62,19 @@ def beep_on():
 #
 def beep_off():
     pwm.ChangeDutyCycle(0)
+
+# get side tone frequency
+#
+def get_beepfreq():
+    return Freq_M
+
+# set side tone frequency
+#
+def set_beepfreq(hz):
+    global Freq_M
+
+    Freq_M=hz
+    pwm.ChangeFrequency(Freq_M)
 
 # table for callback functions by every input port
 #   empty at initial state

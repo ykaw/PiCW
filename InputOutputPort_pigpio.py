@@ -43,7 +43,7 @@ for port in [In_A, In_B, In_C]:
 #
 pi.set_mode(Out_T, pigpio.OUTPUT)
 
-Freq_M=500 # side tone frequency (Hz)
+Freq_M=1500 # side tone frequency (Hz)
 pi.set_mode(Out_M, pigpio.OUTPUT)
 pi.hardware_PWM(Out_M, Freq_M, 0)
 pi.set_PWM_frequency(Out_M, Freq_M)
@@ -63,9 +63,20 @@ def txline_off():
 def beep_on():
     pi.set_PWM_dutycycle(Out_M, 128)
 
-# deacitivate side tone
+# deactivate side tone
 #
 def beep_off():
+    pi.set_PWM_dutycycle(Out_M, 0)
+
+# get side tone frequency
+#
+def get_beepfreq():
+    return pi.get_PWM_frequency(Out_M)
+
+# set side tone frequency
+#
+def set_beepfreq(hz):
+    pi.set_PWM_frequency(Out_M, hz)
     pi.set_PWM_dutycycle(Out_M, 0)
 
 # table for callback functions by every input port
