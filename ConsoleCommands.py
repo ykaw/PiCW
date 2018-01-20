@@ -19,6 +19,7 @@ import CwUtilities     as utl
 # lesson
 # show
 # unit [wpm|cpm]
+# load <file name>
 # quit, exit, bye
 
 # function for toggling status

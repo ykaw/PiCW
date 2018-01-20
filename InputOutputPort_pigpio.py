@@ -1,4 +1,4 @@
-# InputOutputPort - interface to sense/control hardware port
+# InputOutputPort_pigpio - interface to sense/control hardware port
 
 # This module uses pigpio library.
 #   http://abyz.me.uk/rpi/pigpio/
