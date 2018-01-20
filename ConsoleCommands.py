@@ -81,7 +81,7 @@ def paddle(ptype=None):
     return True
 
 # transmit keyborad input directly
-# change speed interactively
+# and change speed interactively
 #
 def keyboard_send(act=None):
     def charfunc(ch):
@@ -118,7 +118,7 @@ def record(act=None):
         print('record of keying started...')
         mem.recstart()
     elif act.upper()=='OFF':
-        print('record of keying stopped...')
+        print('record of keying stopped.')
         mem.recstop()
 
     return True
@@ -188,14 +188,27 @@ def show(act=None):
     print('              Record keying:', 'ON' if mem.recording else 'OFF')
     return True
 
-# toggle speed unit
+# change speed unit
 #
 def speed(act=None):
-    utl.disp_cpm = not utl.disp_cpm
-    if utl.disp_cpm:
-        print('Speed unit change to CPM (characters per minute).')
+    if act==None:
+        if utl.disp_cpm:
+            print('Speed unit is CPM (characters per minute).')
+        else:
+            print('Speed unit is WPM (words per minute).')
+        return True
+
+    if act.upper()=='CPM':
+        utl.disp_cpm=True
+    elif act.upper()=='WPM':
+        utl.disp_cpm=False
     else:
-        print('Speed unit change to WPM (words per minute).')
+        return True
+
+    if utl.disp_cpm:
+        print('Speed unit changed to CPM (characters per minute).')
+    else:
+        print('Speed unit changed to WPM (words per minute).')
 
     return True
 
@@ -297,7 +310,7 @@ number   : set speed                   |
 tx [off|on]        : TX control line   |play               : replay keying
 beep [off|on|freq] : side tone         |training           : training mode
 straight [off|on]  : straight key      |show               : display settings
-paddle [off|iambic|iambic-rev|         |speed              : toggle WPM/CPM
+paddle [off|iambic|iambic-rev|         |speed [wpm|cpm]    : toggle WPM/CPM
         bug|bug-rev|sideswiper]        |load <file_name>   : load config
                    : paddle action     |help               : display help
 kb                 : keyboard transmit |?                  : display this
