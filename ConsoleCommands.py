@@ -8,7 +8,7 @@ import InputOutputPort as port
 import KeyingControl   as key
 import StraightKeyer   as stk
 import PaddleKeyer     as pdl
-import MessageKeyer    as msg
+import TextKeyer       as txt
 import CwUtilities     as utl
 
 # function for toggling status - on and off
@@ -93,9 +93,9 @@ def keyboard_send(act=None):
             print('<'+utl.speedstr()+'>', end='')
             sys.stdout.flush()
         elif ch=="\x08" or ch=="\x7f":
-            msg.sendtext('{HH}')
+            txt.sendstr('{HH}')
         else:
-            msg.sendtext(ch)
+            txt.sendstr(ch)
 
     print('entering keyboard transmission mode...')
     print("    '$' or <ESC>     - exit this mode.")
@@ -117,7 +117,7 @@ def xmit_file(filename=None):
             while True:
                 line=infile.readline()
                 if line:
-                    if not (msg.sendtext(line)):
+                    if not (txt.sendstr(line)):
                         return True
                 else:
                     break
@@ -138,18 +138,40 @@ def training(act=None):
     print()
     print('tranining mode: transmit', lines*words, 'words with', chars, 'letters...' )
     time.sleep(5)
-    msg.sendtext('HR HR = ')
+    txt.sendstr('HR HR = ')
     print()
     for line in range(lines):
         for word in range(words):
             for char in range(chars):
-                if not msg.sendtext(random.choice(letters)):
+                if not txt.sendstr(random.choice(letters)):
                     print()
                     return True
-            msg.sendtext(' ')
+            txt.sendstr(' ')
         print()
-    msg.sendtext('+')
+    txt.sendstr('+')
     print()
+
+    return True
+
+# display parameter settings
+#
+def show(act=None):
+    print('Current setteings:')
+    print('  Paddle and computer speed:',utl.speedstr())
+    print('                 TX control:', 'ON' if key.tx_enable else 'OFF')
+    print('                  Side tone:', 'ON' if key.beep_enable else 'OFF', ', freq', port.get_beepfreq(), 'Hz')
+    print('               Straight key:', 'ON' if stk.getaction else 'OFF')
+    print('              Paddle action:', paddletype)
+    return True
+
+# toggle speed unit
+#
+def speed(act=None):
+    utl.disp_cpm = not utl.disp_cpm
+    if utl.disp_cpm:
+        print('Speed unit change to CPM (characters per minute).')
+    else:
+        print('Speed unit change to WPM (words per minute).')
 
     return True
 
@@ -237,30 +259,24 @@ Note:
 # display brief command help
 #
 def display_short_help(act=None):
-    print('''=====[ PiCW.py commands (Type 'help' for more details) ]=====
-a number: set speed of paddle and message keyer directly
-
-some "<" or ">" characters:
-          change speed by numbers of character
-
-a text string beginning with a space:
-          transmit the text string directly
-
-tx [off|on]         :  disable/enable controlling line to transmitter
-beep [off|on|freq]  :  disable/enable/set freqency of side tone
-straight [off|on]   :  disable/enable straight key action
-paddle [off|iambic|iambic-rev|bug|bug-rev|sideswiper]
-                    :  disable or set paddle type
-kb                  :  enter keyboard transmit mode
-xmit <file_name>    :  transmit contets of text file
-training            :  start training mode
-show                :  display settting parameters
-speed [wpm|cpm]     :  set speed unit
-load <file_name>    :  load console command from a file
-help                :  display the help message
-?                   :  display this short help message
-quit, exit, bye     :  exit from PiCW.py
-============================================================='''[:-1])
+    print('''=====[ PiCW.py commands ]======================================================
+                                       |
+number   : set speed                   |
+"<", ">" : slower/faster               |
+" "text  : transmit text directly      |
+                                       |
+                                       |
+tx [off|on]        : TX control line   |show               : display settings
+beep [off|on|freq] : side tone         |speed              : toggle WPM/CPM
+straight [off|on]  : straight key      |load <file_name>   : load config
+paddle [off|iambic|iambic-rev|         |help               : display help
+        bug|bug-rev|sideswiper]        |?                  : display this
+                   : paddle action     |quit, exit, bye    : exit from PiCW.py
+kb                 : keyboard transmit |
+xmit <file_name>   : file transmit     |
+training           : training mode     |
+                                       |
+==========================================[ Type 'help' for more details ]====='''[:-1])
 
     return True
 
@@ -280,8 +296,8 @@ cmds={'TX':       txline,
       'KB':       keyboard_send,
       'XMIT':     xmit_file,
       'TRAINING': training,
-      'SHOW':     not_imp,
-      'SPEED':    not_imp,
+      'SHOW':     show,
+      'SPEED':    speed,
       'LOAD':     load_file,
       'HELP':     display_help,
       '?':        display_short_help,
@@ -305,10 +321,10 @@ def parser(line):
         key.setspeed(key.getspeed()*pow(1.05, line.count('>')-line.count('<')))
         return True
 
-    # send text message using MessageKeyer module
+    # send text message using TextKeyer module
     #
     elif re.match(r" .+", line):
-        msg.sendtext(line[1:])
+        txt.sendstr(line[1:])
         return True
 
     # call console commands

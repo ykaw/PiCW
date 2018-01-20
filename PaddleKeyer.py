@@ -3,7 +3,7 @@
 import threading
 import InputOutputPort as port
 import KeyingControl   as key
-import MessageKeyer    as msg
+import TextKeyer       as txt
 
 # states of a paddle
 #
@@ -81,8 +81,8 @@ def keying_iambic():
 
         # request abort to message keyer
         #
-        if msg.active:
-            msg.abort_request()
+        if txt.active:
+            txt.abort_request()
             continue
 
         # either of paddles were pressed

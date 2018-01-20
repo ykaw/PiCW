@@ -4,7 +4,7 @@ import argparse
 import sys
 import InputOutputPort as port
 import KeyingControl   as key
-import MessageKeyer    as msg
+import TextKeyer       as txt
 
 cmdopt = argparse.ArgumentParser()
 cmdopt.add_argument("-s", type=int, default=25)
@@ -23,7 +23,7 @@ def terminate():
 #
 try :
     for line in sys.stdin :
-        if not msg.sendtext(line):
+        if not txt.sendstr(line):
             break
 
     terminate()

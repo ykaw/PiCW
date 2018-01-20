@@ -6,11 +6,8 @@
 #       (kaw@on.rim.or.jp, ex JH0NUQ)
 
 import readline
-import re
 import InputOutputPort as port
-import KeyingControl   as key
 import PaddleKeyer     as pdl
-import MessageKeyer    as msg
 import CwUtilities     as utl
 import ConsoleCommands as cmd
 

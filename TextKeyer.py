@@ -1,4 +1,4 @@
-# MessageKeyer - encode text string to morse keying
+# TextKeyer    - encode text string to morse keying
 
 import sys
 import InputOutputPort as port
@@ -54,7 +54,7 @@ def chars(chrs) :
 # send string as a morse code
 # ... substring such as {BT} represents concatenated symbol
 #
-def sendtext(text) :
+def sendstr(text) :
     global active, abort
 
     concsym =False

@@ -2,7 +2,7 @@
 
 import InputOutputPort as port
 import KeyingControl   as key
-import MessageKeyer    as msg
+import TextKeyer       as txt
 
 # callback function
 #
@@ -10,8 +10,8 @@ def action(state):
     # almost pass-through
     #
     if state==key.PRESSED:
-        if msg.active:
-            msg.abort_request() # abort message keyer if active
+        if txt.active:
+            txt.abort_request() # abort message keyer if active
         else:
             key.mark()
     elif state==key.RELEASED:
@@ -21,8 +21,8 @@ def action(state):
 # callback function to do nothing
 #
 def null_action(port):
-    if msg.active:
-        msg.abort_request() # abort message keyer if active
+    if txt.active:
+        txt.abort_request() # abort message keyer if active
 
 # initialization
 #
