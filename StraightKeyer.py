@@ -10,10 +10,8 @@ def action(state):
     # almost pass-through
     #
     if state==key.PRESSED:
-        if txt.active:
-            txt.abort_request() # abort message keyer if active
-        else:
-            key.mark()
+        key.abort_request() # request to abort message keyer
+        key.mark()
     elif state==key.RELEASED:
         key.space()
 
@@ -21,8 +19,7 @@ def action(state):
 # callback function to do nothing
 #
 def null_action(port):
-    if txt.active:
-        txt.abort_request() # abort message keyer if active
+    key.abort_request()
 
 # initialization
 #

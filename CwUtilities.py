@@ -38,3 +38,18 @@ def speed2float(speed):
         return float(speed)/5.0
     else:
         return float(speed)
+
+# simple progressbar
+#
+class ProgressBar():
+
+    def __init__(self, maxbarlen, maxval):
+        self.maxbarlen=maxbarlen
+        self.maxval=maxval
+        self.barlen=0
+
+    def diff(self, val):
+        newbarlen=int(self.maxbarlen*val/self.maxval)
+        diffval=newbarlen-self.barlen
+        self.barlen=newbarlen
+        return diffval

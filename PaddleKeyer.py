@@ -81,9 +81,7 @@ def keying_iambic():
 
         # request abort to message keyer
         #
-        if txt.active:
-            txt.abort_request()
-            continue
+        key.abort_request()
 
         # either of paddles were pressed
         #

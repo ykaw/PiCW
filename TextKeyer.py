@@ -55,17 +55,12 @@ def chars(chrs) :
 # ... substring such as {BT} represents concatenated symbol
 #
 def sendstr(text) :
-    global active, abort
-
     concsym =False
     concword=''
 
-    abort=False
-    active = True
     for ch in list(text) :
         try:
-            if abort:
-                active=False
+            if key.abort_requested():
                 return False
             sys.stdout.write(ch.upper())
             sys.stdout.flush()
@@ -85,20 +80,6 @@ def sendstr(text) :
 
         except KeyboardInterrupt:
             key.space()
-            active=False
             return False
 
-    # all text sent
-    active=False
-    return not abort
-
-# statuses for abort sending
-#
-active=False  # true if sending
-abort=False   # true if abort requested by other keyer
-
-# store abort request
-#
-def abort_request():
-    global abort
-    abort=True
+    return True

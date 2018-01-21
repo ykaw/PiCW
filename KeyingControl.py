@@ -97,6 +97,26 @@ def cspc():
 def wspc():
     sendspace(2*dotlen)
 
+# flag to abort requested
+#
+abort=False
+
+# store abort request
+#
+def abort_request():
+    global abort
+    abort=True
+
+# return abort status
+def abort_requested():
+    return abort
+
+# reset abort request
+#
+def reset_abort_request():
+    global abort
+    abort=False
+
 # initialization
 #
 setspeed(18)

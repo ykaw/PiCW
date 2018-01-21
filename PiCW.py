@@ -6,21 +6,33 @@
 #       (kaw@on.rim.or.jp, ex JH0NUQ)
 
 import readline
+import os.path
 import InputOutputPort as port
 import PaddleKeyer     as pdl
 import CwUtilities     as utl
 import ConsoleCommands as cmd
 
-# command console
-#
-prompt_cpm = False  #  display speed with CPM
 print("Welcome to PiCW.py")
 print("  Type '?' for the short help.")
+
+# load initial configuration file
+#
+initfile=os.path.expanduser('~/.picwrc')
+try:
+    if os.path.exists(initfile):
+        print()
+        cmd.load_file(initfile)
+except:
+    pass
+
+# command console
+#
 while True:
     # read user's input
     #
     try:
         line=input("\n"+utl.speedstr()+":")
+        print()
     except KeyboardInterrupt:
         continue
     except EOFError:

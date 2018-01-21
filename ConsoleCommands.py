@@ -41,16 +41,16 @@ def beep(act=None):
             freq=int(ac)
             if 0<freq and freq<20000:
                 port.set_beepfreq(freq)
-                print('side tone set to', port.get_beepfreq(), 'Hz')
+                print('Side tone set to', port.get_beepfreq(), 'Hz.')
         return st
 
-    key.beep_enable=togglecmd(act, 'side tone', key.beep_enable, func)
+    key.beep_enable=togglecmd(act, 'Side tone', key.beep_enable, func)
     if act==None:
         print('freq:', port.get_beepfreq(), 'Hz')
     return True
 
 def straight(act=None):
-    stk.setaction(togglecmd(act, 'straight key', stk.getaction()))
+    stk.setaction(togglecmd(act, 'Straight key', stk.getaction()))
     return True
 
 paddletype='IAMBIC' # kludge, yet
@@ -62,7 +62,7 @@ def paddle(ptype=None):
     global paddletype
 
     if ptype==None:
-        print('paddle type is', paddletype)
+        print('Paddle type is', paddletype)
         return True
 
     ptype=ptype.upper()
@@ -74,10 +74,10 @@ def paddle(ptype=None):
     elif ptype=='SIDESWIPER': settype(stk.action,      stk.action)
     else:
         print('? unknown paddle type -', ptype)
-        print('  paddle type is one of off, iambic, iambic-rev, bug, bug-rev and sideswiper.')
+        print('  Paddle type is one of OFF, IAMBIC, IAMBIC-REV, BUG, BUG-REV and SIDESWIPER.')
 
     paddletype=ptype
-    print('paddle type is set to', paddletype)
+    print('Paddle type is set to', paddletype)
     return True
 
 # transmit keyborad input directly
@@ -98,13 +98,13 @@ def keyboard_send(act=None):
         else:
             txt.sendstr(ch)
 
-    print('entering keyboard transmission mode...')
+    print('Entering keyboard transmission mode...')
     print("    '$' or <ESC>     - exit this mode.")
     print("    '<' or '>'       - change speed by 5%")
     print("    <BS> or <Delete> - send {HH}")
 
     utl.with_keytyping(charfunc,
-                       lambda ch : ch == '$' or ch == "\x1b")
+                       lambda ch : ch == '$' or ch == "\x1b" or key.abort_requested())
     return True
 
 # start/stop to record keying
@@ -115,18 +115,22 @@ def record(act=None):
         return True
 
     if act.upper()=='ON':
-        print('record of keying started...')
         mem.recstart()
     elif act.upper()=='OFF':
-        print('record of keying stopped.')
         mem.recstop()
 
     return True
 
 # replay recorded keying
 #
-def play(act=None):
-    mem.replay()
+def play(speed=None):
+    if speed==None:
+        speed='1.0'
+    if not re.match(r"[0-9.]+$", speed):
+        return True
+    speed=float(speed)
+
+    mem.replay(speed)
     return True
 
 # transmit the contents of file
@@ -145,35 +149,58 @@ def xmit_file(filename=None):
                 else:
                     break
     except:
-        print("? can't open", filename)
+        print("? Can't open", filename)
 
     return True
 
 # training mode
 #
-def training(act=None):
-    letters='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+def training(*chartypes):
 
+    #character type
+    #
+    number  ='0123456789'
+    alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    symbol  ='()-.,:"+=/'+"'"
+
+    letters=''
+    for ctype in chartypes:
+        if re.match(r"num", ctype, re.IGNORECASE):
+            letters=letters+number
+        elif re.match(r"alpha", ctype, re.IGNORECASE):
+            letters=letters+alphabet
+        elif re.match(r"sym", ctype, re.IGNORECASE):
+            letters=letters+symbol
+        elif re.match(r"all$", ctype, re.IGNORECASE):
+            letters=number*3+alphabet*20+symbol
+
+    # default character type
+    #
+    if letters=='':
+        letters=number*3+alphabet*20+symbol
+
+    # size of test
+    #
     lines=10
     words=10
     chars=5
 
     print()
-    print('tranining mode: transmit', lines*words, 'words with', chars, 'letters...' )
+    print('Tranining mode: transmit', lines*words, 'words with', chars, 'letters...' )
     time.sleep(5)
     txt.sendstr('HR HR = ')
     print()
     for line in range(lines):
         for word in range(words):
             for char in range(chars):
-                if not txt.sendstr(random.choice(letters)):
+                if key.abort_requested() or not txt.sendstr(random.choice(letters)):
                     print()
                     return True
             txt.sendstr(' ')
         print()
     txt.sendstr('+')
-    print()
 
+    print()
     return True
 
 # display parameter settings
@@ -227,7 +254,7 @@ def load_file(filename=None):
                 else:
                     break
     except:
-        print("? can't open", filename)
+        print("? Can't open", filename)
 
     return True
 
@@ -273,10 +300,13 @@ xmit <file_name>    :  transmit contets of text file
 
 recording [off|on]  :  start/stop record of keying
 
-play                :  replay recorded keying
+play [speed]        :  replay keying with the speed
 
-training            :  start training mode
+training [alpha|num|symbol|all] ...
+                    :  start training mode
                        transmit randomly-generated 100 words
+                       alpha, num and symbol are type of characters.
+                       'all' is same as 'training alpha num symbol'.
 
 show                :  display settting parameters
 
@@ -307,14 +337,14 @@ number   : set speed                   |
 " "text  : transmit text directly      |
                                        |
                                        |
-tx [off|on]        : TX control line   |play               : replay keying
-beep [off|on|freq] : side tone         |training           : training mode
-straight [off|on]  : straight key      |show               : display settings
-paddle [off|iambic|iambic-rev|         |speed [wpm|cpm]    : toggle WPM/CPM
-        bug|bug-rev|sideswiper]        |load <file_name>   : load config
-                   : paddle action     |help               : display help
-kb                 : keyboard transmit |?                  : display this
-xmit <file_name>   : file transmit     |quit, exit, bye    : exit from PiCW.py
+tx [off|on]        : TX control line   |play [speed]        : replay keying
+beep [off|on|freq] : side tone         |training <CHARTYPES>: training mode
+straight [off|on]  : straight key      |show                : display settings
+paddle [off|iambic|iambic-rev|         |speed [wpm|cpm]     : toggle WPM/CPM
+        bug|bug-rev|sideswiper]        |load <file_name>    : load config
+                   : paddle action     |help                : display help
+kb                 : keyboard transmit |?                   : display this
+xmit <file_name>   : file transmit     |quit, exit, bye     : exit from PiCW.py
 record [on|off]    : record keying     |
                                        |
 ==========================================[ Type 'help' for more details ]====='''[:-1])
@@ -367,7 +397,9 @@ def parser(line):
     # send text message using TextKeyer module
     #
     elif re.match(r" .+", line):
+        key.reset_abort_request()
         txt.sendstr(line[1:])
+        print()
         return True
 
     # call console commands
@@ -377,6 +409,7 @@ def parser(line):
         if params:
             cmd=params.pop(0).upper()
             if cmd in cmds.keys():
+                key.reset_abort_request()
                 return cmds[cmd](*params)
             else:
                 print("? Eh")
