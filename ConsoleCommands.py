@@ -2,6 +2,7 @@
 
 import re
 import sys
+import subprocess
 import time
 import random; random.seed()
 import InputOutputPort as port
@@ -31,10 +32,14 @@ def togglecmd(act, label, stat, elsefunc=(lambda ac, lb, st: st)):
     else:
         return elsefunc(act, label, stat)
 
+# Console command - TX
+#
 def txline(act=None):
     key.tx_enable=togglecmd(act, 'TX control', key.tx_enable)
     return True
 
+# Console command - BEEP
+#
 def beep(act=None):
     def func(ac, lb, st):
         if re.match(r"[0-9]+$", ac):
@@ -49,11 +54,16 @@ def beep(act=None):
         print('freq:', port.get_beepfreq(), 'Hz')
     return True
 
+# Console Command - STRAIGHT
+#
 def straight(act=None):
     stk.setaction(togglecmd(act, 'Straight key', stk.getaction()))
     return True
 
 paddletype='IAMBIC' # kludge, yet
+
+# Console Command - PADDLE
+#
 def paddle(ptype=None):
     def settype(act_A, act_B):
         port.bind(port.In_A, act_A)
@@ -80,8 +90,10 @@ def paddle(ptype=None):
     print('Paddle type is set to', paddletype)
     return True
 
-# transmit keyborad input directly
-# and change speed interactively
+# Console Command - KB
+#
+#     transmit keyboard input directly
+#     and change speed interactively
 #
 def keyboard_send(act=None):
     def charfunc(ch):
@@ -99,15 +111,20 @@ def keyboard_send(act=None):
             txt.sendstr(ch)
 
     print('Entering keyboard transmission mode...')
-    print("    '$' or <ESC>     - exit this mode.")
-    print("    '<' or '>'       - change speed by 5%")
-    print("    <BS> or <Delete> - send {HH}")
+    print("    '$', <ESC> or Ctrl-C  - exit this mode.")
+    print("              (or Press straight or paddle.)")
+    print("    '<' or '>'            - change speed by 5%")
+    print("    <BS> or <Delete>      - send {HH}")
 
+    # start transmission
+    #
     utl.with_keytyping(charfunc,
                        lambda ch : ch == '$' or ch == "\x1b" or key.abort_requested())
     return True
 
-# start/stop to record keying
+# Console Command - RECORD
+#
+#     start/stop to record keying
 #
 def record(act=None):
     if act==None:
@@ -121,7 +138,10 @@ def record(act=None):
 
     return True
 
-# replay recorded keying
+# Console Command - PLAY
+#
+#     replay recorded keying
+#     with specified speed rate (default=1.0).
 #
 def play(speed=None):
     if speed==None:
@@ -130,10 +150,15 @@ def play(speed=None):
         return True
     speed=float(speed)
 
-    mem.replay(speed)
+    mem.replay(speed,
+               int(9*int(subprocess.check_output(['tput', 'cols']))/10))
+               # progress bar is filled to 90% of width of terminal
+
     return True
 
-# transmit the contents of file
+# Console Command - XMIT
+#
+#     transmit the contents of file
 #
 def xmit_file(filename=None):
     if filename==None:
@@ -145,6 +170,7 @@ def xmit_file(filename=None):
                 line=infile.readline()
                 if line:
                     if not (txt.sendstr(line)):
+                        print()
                         return True
                 else:
                     break
@@ -153,7 +179,9 @@ def xmit_file(filename=None):
 
     return True
 
-# training mode
+# Console Command - TRAINING
+#
+#     training mode
 #
 def training(*chartypes):
 
@@ -165,32 +193,36 @@ def training(*chartypes):
 
     letters=''
     for ctype in chartypes:
-        if re.match(r"num", ctype, re.IGNORECASE):
+        if re.match(r"all$", ctype, re.IGNORECASE):
+            letters=number+alphabet+symbol
+        elif re.match(r"n", ctype, re.IGNORECASE):
             letters=letters+number
-        elif re.match(r"alpha", ctype, re.IGNORECASE):
+        elif re.match(r"a", ctype, re.IGNORECASE):
             letters=letters+alphabet
-        elif re.match(r"sym", ctype, re.IGNORECASE):
+        elif re.match(r"s", ctype, re.IGNORECASE):
             letters=letters+symbol
-        elif re.match(r"all$", ctype, re.IGNORECASE):
-            letters=number*3+alphabet*20+symbol
 
     # default character type
     #
     if letters=='':
         letters=number*3+alphabet*20+symbol
+        # appearance: number:alhapet:symbol=3:20:1
 
     # size of test
     #
-    lines=10
-    words=10
-    chars=5
+    lines=10  # total lines
+    words=10  # words in a line
+    maxwords=lines*words
+    chars=5   # characters in a word
 
+    print('Tranining mode: transmit', maxwords, 'words with', chars, 'letters...' )
     print()
-    print('Tranining mode: transmit', lines*words, 'words with', chars, 'letters...' )
     time.sleep(5)
+    print('       : ', end='')
     txt.sendstr('HR HR = ')
     print()
     for line in range(lines):
+        print('{:3d}/{:3d}: '.format(line*words+1, maxwords), end='')
         for word in range(words):
             for char in range(chars):
                 if key.abort_requested() or not txt.sendstr(random.choice(letters)):
@@ -198,12 +230,15 @@ def training(*chartypes):
                     return True
             txt.sendstr(' ')
         print()
+    print('      : ', end='')
     txt.sendstr('+')
 
     print()
     return True
 
-# display parameter settings
+# Console Command - SHOW
+#
+#     display parameter settings
 #
 def show(act=None):
     print('Current setteings:')
@@ -215,7 +250,9 @@ def show(act=None):
     print('              Record keying:', 'ON' if mem.recording else 'OFF')
     return True
 
-# change speed unit
+# Console Command - SPEED
+#
+#     change speed unit
 #
 def speed(act=None):
     if act==None:
@@ -239,7 +276,9 @@ def speed(act=None):
 
     return True
 
-# load sequence of commands from a file
+# Console Command - LOAD
+#
+#     load sequence of commands from a file
 #
 def load_file(filename=None):
     if filename==None:
@@ -258,7 +297,9 @@ def load_file(filename=None):
 
     return True
 
-# display command help
+# Console Command - HELP
+#
+#     display command help
 #
 def display_help(act=None):
     print('''PiCW.py command help:
@@ -281,13 +322,13 @@ text string beginning with a space:
             Note: You can send ...-. by the notation {VA} .
                   {eeetet} is also OK.
 
-tx [off|on]         :  disable/enable controlling line to transmitter
+tx [OFF|ON]         :  disable/enable controlling line to transmitter
 
-beep [off|on|freq]  :  disable/enable/set freqency of side tone
+beep [OFF|ON|freq]  :  disable/enable or set freqency[Hz] of side tone
 
-straight [off|on]   :  disable/enable straight key action
+straight [OFF|ON]   :  disable/enable straight key action
 
-paddle [off|iambic|iambic-rev|bug|bug-rev|sideswiper]
+paddle [OFF|IAMBIC|IAMBIC-REV|BUG|BUG-REV|SIDESWIPER]
                     :  disable paddle action
                        or enable the paddle by specified type
                        *-rev swaps dot/dash paddle.
@@ -298,19 +339,19 @@ kb                  :  enter keyboard transmit mode
 
 xmit <file_name>    :  transmit contets of text file
 
-recording [off|on]  :  start/stop record of keying
+recording [OFF|ON]  :  start/stop record of keying
 
 play [speed]        :  replay keying with the speed
 
-training [alpha|num|symbol|all] ...
+training [A|N|S|ALL] ...
                     :  start training mode
                        transmit randomly-generated 100 words
-                       alpha, num and symbol are type of characters.
-                       'all' is same as 'training alpha num symbol'.
+                       A)lpha, N)um and S)ymbol are type of characters.
+                       'training all' is same as 'training a n s'.
 
 show                :  display settting parameters
 
-speed [wpm|cpm]     :  set speed unit words or characters per a minute
+speed [WPM|CPM]     :  set speed unit words or characters per a minute
 
 load <file_name>    :  load console command from a file
 
@@ -327,7 +368,9 @@ Note:
 
     return True
 
-# display brief command help
+# Console Command - HELP
+#
+#     display brief command help
 #
 def display_short_help(act=None):
     print('''=====[ PiCW.py commands ]======================================================
@@ -351,9 +394,13 @@ record [on|off]    : record keying     |
 
     return True
 
+# Console Command - BYE, QUIT, EXIT
+#
 def bye(act=None):
     return False
 
+# stub for unimplemented commands
+#
 def not_imp(act=None):
     print("Sorry, this command isn't implemented yet.")
     return True

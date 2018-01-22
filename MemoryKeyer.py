@@ -1,13 +1,14 @@
 # MemoryKeyer - Record/Replay real time keying
 
 import time
-import sys
 import KeyingControl as key
 import CwUtilities   as utl
 
 recording=False
-tstamp=[]    # sequence of time stamp
-keystat=[]   # sequence of key operation
+tstamp   =[]   # sequence of time stamp
+keystat  =[]   # sequence of key operation
+maxdelay =600  # Too long mark/space (sec) is truncated.
+               #(disabled if maxdelay is non-positive)
 
 # start recording
 #
@@ -34,14 +35,14 @@ def recstop():
         return False
 
     recording=False
-    tstamp.append(tstamp[-1]+1)
+    tstamp.append(tstamp[-1]+0.1)
     keystat.append(key.RELEASED)
     print('Stop recording.')
     return True
 
 # replay recording
 #
-def replay(speed):
+def replay(speed, barlen=0):
     if recording:
         print("? Now recording, can't replay")
         return False
@@ -50,40 +51,51 @@ def replay(speed):
         print('? Replay speed is too fast or too slow.')
         return False
 
-    if not recording and tstamp:
+    if not tstamp:
+        return False
 
-        print('Replay keying:', len(tstamp), 'marks and spaces...')
+    print('Replay keying:', len(tstamp), 'marks and spaces...')
 
-        # setups for progress bar
-        #
-        barlen=72
-        bar=utl.ProgressBar(barlen, int(len(tstamp)))
-        print('|', '-' * barlen, '|', sep='')
-        print('|', end=''); sys.stdout.flush()
+    # setups for progress bar
+    #
+    if 1<=barlen:
+        progbar=utl.ProgressBar(barlen, int(len(tstamp)))
+        progbar.begin()
 
-        # frequency of bar update
-        #
-        barstep=int(len(tstamp)/barlen)
-
+        barstep=int(len(tstamp)/barlen)  # frequency of bar update
         barcount=0
-        try:
-            for i in range(len(tstamp)-1):
-                if keystat[i]==key.PRESSED:
-                    key.mark()
-                elif keystat[i]==key.RELEASED:
-                    key.space()
 
-                #simple progress bar
+    try:
+        # replay loop
+        #
+        for i in range(len(tstamp)-1):
+            if key.abort_requested():
+                key.space()
+                progbar.end(False)
+                return False
+            elif keystat[i]==key.PRESSED:
+                key.mark()
+            elif keystat[i]==key.RELEASED:
+                key.space()
+
+            if 1<=barlen:
                 barcount += 1
                 if barstep<barcount:
-                    print('*' * bar.diff(i), end='') # update progressbar
-                    sys.stdout.flush()
+                    progbar.update(i)
                     barcount=0
+
+            if 0<=maxdelay:
+                time.sleep(min(maxdelay, (tstamp[i+1]-tstamp[i])/speed))
+            else:
                 time.sleep((tstamp[i+1]-tstamp[i])/speed)
-            print('*' * bar.diff(int(len(tstamp))), '|', sep='')
 
-        except KeyboardInterrupt:
+        if 1<=barlen:
+            # complete progressbar
+            progbar.end(True)
+
+    except KeyboardInterrupt:
+        if 1<=barlen:
             print()
-            key.space()
+        key.space()
 
-        return True
+    return True

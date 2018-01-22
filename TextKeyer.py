@@ -32,8 +32,8 @@ codetab = {'a': ".-",      'b': "-...",    'c': "-.-.",    'd': "-..",     'e': 
 # make upper and lower case letters identical
 #
 codetab_upper = {}
-for ch in codetab :
-    if ch.islower() :
+for ch in codetab:
+    if ch.islower():
         codetab_upper[ch.upper()] = codetab[ch]
 codetab.update(codetab_upper)
 
@@ -42,40 +42,42 @@ codetab.update(codetab_upper)
 #     e.g. chars('SOS') sends "...___...", not "... ___ ...".
 # ... An undefined character is treated as a space.
 #
-def chars(chrs) :
-    for ch in list(chrs) :
-        if ch in codetab :
-            for dd in list(codetab[ch]) :
+def chars(chrs):
+    for ch in list(chrs):
+        if ch in codetab:
+            for dd in list(codetab[ch]):
                 functab[dd]()
-        else :
+        else:
             key.wspc()
     key.cspc()
 
 # send string as a morse code
-# ... substring such as {BT} represents concatenated symbol
+#     in text, substring such as {BT} represents concatenated symbol
 #
-def sendstr(text) :
+#     returns False when whole text not sent
+#
+def sendstr(text):
     concsym =False
     concword=''
 
-    for ch in list(text) :
+    for ch in list(text):
         try:
             if key.abort_requested():
                 return False
             sys.stdout.write(ch.upper())
             sys.stdout.flush()
-            if concsym :
-                if ch == '}' :
+            if concsym:
+                if ch == '}':
                     chars(concword)
                     concsym =False
                     concword=''
-                else :
+                else:
                     concword=concword + ch
-            else :
-                if ch == '{' :
+            else:
+                if ch == '{':
                     concsym =True
                     concword=''
-                else :
+                else:
                     chars(ch)
 
         except KeyboardInterrupt:
