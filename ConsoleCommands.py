@@ -256,23 +256,30 @@ def show(act=None):
 #
 def speed(act=None):
     if act==None:
-        if utl.disp_cpm:
+        if utl.speed_unit=='CPM':
             print('Speed unit is CPM (characters per minute).')
-        else:
+        elif utl.speed_unit=='WPM':
             print('Speed unit is WPM (words per minute).')
+        elif utl.speed_unit=='QRS':
+            print('Speed unit is QRS (dot duration in seccond).')
         return True
 
     if act.upper()=='CPM':
-        utl.disp_cpm=True
+        utl.speed_unit='CPM'
     elif act.upper()=='WPM':
-        utl.disp_cpm=False
+        utl.speed_unit='WPM'
+    elif act.upper()=='QRS':
+        utl.speed_unit='QRS'
     else:
+        print('? unknown speed unit')
         return True
 
-    if utl.disp_cpm:
+    if utl.speed_unit=='CPM':
         print('Speed unit changed to CPM (characters per minute).')
-    else:
+    elif utl.speed_unit=='WPM':
         print('Speed unit changed to WPM (words per minute).')
+    elif utl.speed_unit=='QRS':
+        print('Speed unit changed to QRS (dot duration in seccond).')
 
     return True
 
@@ -351,7 +358,7 @@ training [A|N|S|ALL] ...
 
 show                :  display settting parameters
 
-speed [WPM|CPM]     :  set speed unit words or characters per a minute
+speed [WPM|CPM|QRS] :  set speed unit words or characters per a minute
 
 load <file_name>    :  load console command from a file
 
@@ -383,8 +390,8 @@ number   : set speed                   |
 tx [off|on]        : TX control line   |play [speed]        : replay keying
 beep [off|on|freq] : side tone         |training <CHARTYPES>: training mode
 straight [off|on]  : straight key      |show                : display settings
-paddle [off|iambic|iambic-rev|         |speed [wpm|cpm]     : toggle WPM/CPM
-        bug|bug-rev|sideswiper]        |load <file_name>    : load config
+paddle [off|iambic|iambic-rev|bug|     |speed [WPM|CPM|QRS] : toggle WPM/CPM/QRS
+        bug-rev|sideswiper]            |load <file_name>    : load config
                    : paddle action     |help                : display help
 kb                 : keyboard transmit |?                   : display this
 xmit <file_name>   : file transmit     |quit, exit, bye     : exit from PiCW.py
@@ -429,7 +436,7 @@ cmds={'TX':       txline,
 #
 def parser(line):
     # set speed of Message Keyer and Iambic Keyer
-    # in WPM or CPM
+    # in WPM, CPM or QRS
     #
     if re.match(r"[0-9.]+", line):
         key.setspeed(utl.speed2float(line))

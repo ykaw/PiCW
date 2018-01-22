@@ -26,23 +26,27 @@ def with_keytyping(charfunc, endfunc):
 
 # speed unit to display
 #
-disp_cpm=False # Use wpm if false
+speed_unit='WPM' # Use wpm as default
 
 # return speed string to display
 #
 def speedstr():
-    if disp_cpm:
+    if speed_unit=='CPM':
         return "{:.1f}CPM".format(5.0*key.getspeed())
+    elif speed_unit=='QRS':
+        return "{:.3f}QRS".format(key.dotlen)
     else:
         return "{:.1f}WPM".format(key.getspeed())
 
 # conver user's input string to float
 #
 def speed2float(speed):
-    if disp_cpm:
+    if speed_unit=='CPM':
         return float(speed)/5.0
-    else:
+    elif speed_unit=='WPM':
         return float(speed)
+    elif speed_unit=='QRS':
+        return float(60/(50*float(speed)))
 
 # simple progressbar
 #
