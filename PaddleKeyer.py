@@ -3,6 +3,7 @@
 import threading
 import InputOutputPort as port
 import KeyingControl   as key
+import StraightKeyer   as stk
 import TextKeyer       as txt
 
 # states of a paddle
@@ -42,12 +43,19 @@ def keying_iambic():
 
         # send first dot or dash
         #
+        #    If Straight key is being pressed,
+        #    increase or decrease speed
+        #
         if pressed==PADDLE_DOT:
             alt_paddle=PADDLE_DASH
             key.dot()
+            if stk.pressing:
+                key.setspeed(key.getspeed()/1.05)
         elif pressed==PADDLE_DASH:
             alt_paddle=PADDLE_DOT
             key.dash()
+            if stk.pressing:
+                key.setspeed(key.getspeed()*1.157) # 1.05**3
 
         # send trailing dots or dashes, if any
         #

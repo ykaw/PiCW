@@ -7,10 +7,12 @@ import KeyingControl   as key
 import TextKeyer       as txt
 
 cmdopt = argparse.ArgumentParser()
-cmdopt.add_argument("-s", type=int, default=25)
+cmdopt.add_argument("-s", type=int, default=30)
+cmdopt.add_argument("-f", type=int, default=500)
 args = cmdopt.parse_args()
 
 key.setspeed(args.s)
+port.set_beepfreq(args.f)
 
 # termination process
 #

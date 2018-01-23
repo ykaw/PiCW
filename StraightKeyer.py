@@ -7,14 +7,17 @@ import TextKeyer       as txt
 # callback function
 #
 def action(state):
+    global pressing
+
     # almost pass-through
     #
     if state==key.PRESSED:
-        key.abort_request() # request to abort message keyer
         key.mark()
+        key.abort_request() # request to abort message keyer
+        pressing=True
     elif state==key.RELEASED:
         key.space()
-
+        pressing=False
 
 # callback function to do nothing
 #
@@ -38,3 +41,5 @@ def setaction(newact):
 
 actstat=False  # current status
 setaction(True)
+
+pressing=False

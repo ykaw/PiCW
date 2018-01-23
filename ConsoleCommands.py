@@ -453,7 +453,6 @@ def parser(line):
     elif re.match(r" .+", line):
         key.reset_abort_request()
         txt.sendstr(line[1:])
-        print()
         return True
 
     # call console commands
