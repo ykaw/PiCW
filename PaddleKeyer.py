@@ -15,8 +15,8 @@ PADDLE_DASH=2
 # global status and notifying event
 # for iambic paddles
 #
-dot_pressed =False        # current state of dot paddle. True when the paddle is being pressed.
-dash_pressed=False        # current state of dash paddle.
+pressing_dot =False        # current state of dot paddle. True when the paddle is being pressed.
+pressing_dash=False        # current state of dash paddle.
 sqz_paddles =[]           # a queue for squeezed paddle actions.
 evt_pressed =PADDLE_NONE  # port of pressed paddle
                           # PADDLE_NONE means both straight and iambic are idling
@@ -57,7 +57,14 @@ def keying_iambic():
             if stk.pressing:
                 key.setspeed(key.getspeed()*1.157) # 1.05**3
 
-        # send trailing dots or dashes, if any
+        #mode A/B trial
+        #
+        #if not sqz_paddles:
+        #    return alt_paddle
+        #
+        #sqz_paddles=[]
+
+        # send squeezed dots or dashes, if any
         #
         while sqz_paddles:
             pressed=sqz_paddles.pop(0)
@@ -67,6 +74,16 @@ def keying_iambic():
             elif pressed==PADDLE_DASH:
                 alt_paddle=PADDLE_DOT
                 key.dash()
+
+
+        #mode A/B trial
+        #
+        # if alt_paddle==PADDLE_DOT:
+        #     alt_paddle=PADDLE_DASH
+        #     key.dot()
+        # elif alt_paddle==PADDLE_DASH:
+        #   alt_paddle=PADDLE_DOT
+        #     key.dash()
 
         # return next dot or dash
         #
@@ -98,11 +115,11 @@ def keying_iambic():
         # either or both paddle(s) are keeping to be pressed
         #
         while True:
-            if dot_pressed and dash_pressed:
+            if pressing_dot and pressing_dash:
                 alt_paddle=output_with_squeezed(alt_paddle)
-            elif dot_pressed:
+            elif pressing_dot:
                 alt_paddle=output_with_squeezed(PADDLE_DOT)
-            elif dash_pressed:
+            elif pressing_dash:
                 alt_paddle=output_with_squeezed(PADDLE_DASH)
             else:
                 break
@@ -110,33 +127,33 @@ def keying_iambic():
 # callback function for iambic dot paddle
 #
 def dot_action(state):
-    global dot_pressed, dash_pressed, evt_pressed, sqz_paddles
+    global pressing_dot, pressing_dash, evt_pressed, sqz_paddles
 
     # paddle pressed
     if state==key.PRESSED:
-        dot_pressed=True
+        pressing_dot=True
         evt_pressed=PADDLE_DOT
         sqz_paddles.append(evt_pressed)
         ev_pressed.set() # notify to iambic subthread
     # paddle released
     elif state==key.RELEASED:
-        dot_pressed=False
+        pressing_dot=False
         evt_pressed=PADDLE_NONE
 
 # callback function for iambic dash paddle
 #
 def dash_action(state):
-    global dot_pressed, dash_pressed, evt_pressed, sqz_paddles
+    global pressing_dot, pressing_dash, evt_pressed, sqz_paddles
 
     # paddle pressed
     if state==key.PRESSED:
-        dash_pressed=True
+        pressing_dash=True
         evt_pressed=PADDLE_DASH
         sqz_paddles.append(evt_pressed)
         ev_pressed.set() # notify to iambic subthread
     # paddle released
     elif state==key.RELEASED:
-        dash_pressed=False
+        pressing_dash=False
         evt_pressed=PADDLE_NONE
 
 # initial port bindings
