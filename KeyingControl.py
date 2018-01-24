@@ -27,16 +27,31 @@ def wpm2sec(speed):
 #  - dots of bug keyer
 #
 def setspeed(speed):
-    global wpm, dotlen
+    global wpm, dotlen, cgap, wgap, cgap_rate
     if not speed:
         return # even speed is 0
 
     if 0.0<speed and speed<=100.0:
         wpm=speed
         dotlen=wpm2sec(wpm)
+        cgap=cgap_rate*dotlen
+        wgap=7.0*cgap/3.0
 
 def getspeed():
     return wpm
+
+cgap_rate=3.0
+
+# cgaprate is number of dots
+# between every letter
+#
+def setlettergap(gap):
+    global cgap_rate
+    cgap_rate=gap
+    setspeed(getspeed()) # re-calculation
+
+def getlettergap():
+    return cgap_rate
 
 # mark is the state when the transmission line is active.
 #
@@ -88,14 +103,14 @@ def dash():
 #   dot/dash | gap(1) | cspc(2) | dot/dash
 #            |<-----3 dots----->|
 def cspc():
-    sendspace(2*dotlen)
+    sendspace(cgap-dotlen)
 
 # output space between words
 #   dot/dash | gap(1) | cspc(2) | wspc(2) | cspc(2) | dot/dash
 #            |<---------------7 dots--------------->|
 #
 def wspc():
-    sendspace(2*dotlen)
+    sendspace(wgap+dotlen-cgap-cgap)
 
 # flag to abort requested
 #
@@ -120,4 +135,5 @@ def reset_abort_request():
 # initialization
 #
 setspeed(18)
+setlettergap(3.0)
 port.set_beepfreq(800)

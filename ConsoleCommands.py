@@ -106,7 +106,7 @@ def keyboard_send(act=None):
             print('<'+utl.speedstr()+'>', end='')
             sys.stdout.flush()
         elif ch=="\x08" or ch=="\x7f":
-            txt.sendstr('{HH}')
+            txt.sendstr('[HH]')
         else:
             txt.sendstr(ch)
 
@@ -114,7 +114,7 @@ def keyboard_send(act=None):
     print("    '$', <ESC> or Ctrl-C  - exit this mode.")
     print("              (or Press straight or paddle.)")
     print("    '<' or '>'            - change speed by 5%")
-    print("    <BS> or <Delete>      - send {HH}")
+    print("    <BS> or <Delete>      - send [HH]")
 
     # start transmission
     #
@@ -189,18 +189,20 @@ def training(*chartypes):
     #
     number  ='0123456789'
     alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    symbol  ='()-.,:"+=/'+"'"
+    symbol  ='.,:?-/()"=+*@'+"'"
 
     letters=''
     for ctype in chartypes:
-        if re.match(r"all$", ctype, re.IGNORECASE):
-            letters=number+alphabet+symbol
-        elif re.match(r"n", ctype, re.IGNORECASE):
+        if ctype in 'Nn':
             letters=letters+number
-        elif re.match(r"a", ctype, re.IGNORECASE):
+        elif ctype in 'Aa':
             letters=letters+alphabet
-        elif re.match(r"s", ctype, re.IGNORECASE):
+        elif ctype in 'Ss':
             letters=letters+symbol
+        else:
+            for ch in ctype:
+                if ch.upper() in number+alphabet+symbol:
+                    letters=letters+ch
 
     # default character type
     #
@@ -230,7 +232,7 @@ def training(*chartypes):
                     return True
             txt.sendstr(' ')
         print()
-    print('      : ', end='')
+    print('       : ', end='')
     txt.sendstr('+')
 
     print()
@@ -242,7 +244,8 @@ def training(*chartypes):
 #
 def show(act=None):
     print('Current setteings:')
-    print('  Paddle and computer speed:',utl.speedstr())
+    print('  Paddle and computer speed:', utl.speedstr())
+    print('   Gap between every letter:', key.getlettergap(), 'of dots.')
     print('                 TX control:', 'ON' if key.tx_enable else 'OFF')
     print('                  Side tone:', 'ON' if key.beep_enable else 'OFF', ', freq', port.get_beepfreq(), 'Hz')
     print('               Straight key:', 'ON' if stk.getaction else 'OFF')
@@ -280,6 +283,24 @@ def speed(act=None):
         print('Speed unit changed to WPM (words per minute).')
     elif utl.speed_unit=='QRS':
         print('Speed unit changed to QRS (dot duration in seccond).')
+
+    return True
+
+# Console Command - LETTERGAP
+#
+#     change space length between letters
+#    (also word gap changed)
+#
+def lettergap(gaprate=None):
+    if gaprate==None:
+        print('letter gap is', key.getlettergap(), 'times of dot length.')
+        return True
+
+    if not re.match(r"[0-9.]+$", gaprate) or float(gaprate)<=0:
+        return True
+
+    key.setlettergap(float(gaprate))
+    print('letter gap is set to', key.getlettergap(), 'times of dot length.')
 
     return True
 
@@ -326,8 +347,8 @@ some "<" or ">" characters:
 
 text string beginning with a space:
             transmit the text string directly
-            Note: You can send ...-. by the notation {VA} .
-                  {eeetet} is also OK.
+            Note: You can send ...-. by the notation [VA] .
+                  [eeetet] is also OK.
 
 tx [OFF|ON]         :  disable/enable controlling line to transmitter
 
@@ -350,15 +371,18 @@ recording [OFF|ON]  :  start/stop record of keying
 
 play [speed]        :  replay keying with the speed
 
-training [A|N|S|ALL] ...
+training [A|N|S|string] ...
                     :  start training mode
                        transmit randomly-generated 100 words
                        A)lpha, N)um and S)ymbol are type of characters.
-                       'training all' is same as 'training a n s'.
+                       string is characters to be trained.
 
 show                :  display settting parameters
 
 speed [WPM|CPM|QRS] :  set speed unit words or characters per a minute
+
+lettergap [gapratio]:  set gap duration between letters
+                       gapratio is a times of dot duration
 
 load <file_name>    :  load console command from a file
 
@@ -391,11 +415,11 @@ tx [off|on]        : TX control line   |play [speed]        : replay keying
 beep [off|on|freq] : side tone         |training <CHARTYPES>: training mode
 straight [off|on]  : straight key      |show                : display settings
 paddle [off|iambic|iambic-rev|bug|     |speed [WPM|CPM|QRS] : toggle WPM/CPM/QRS
-        bug-rev|sideswiper]            |load <file_name>    : load config
-                   : paddle action     |help                : display help
-kb                 : keyboard transmit |?                   : display this
-xmit <file_name>   : file transmit     |quit, exit, bye     : exit from PiCW.py
-record [on|off]    : record keying     |
+        bug-rev|sideswiper]            |lettergap [gapratio]: letter gap length
+                   : paddle action     |load <file_name>    : load config
+kb                 : keyboard transmit |help                : display help
+xmit <file_name>   : file transmit     |?                   : display this
+record [on|off]    : record keying     |quit, exit, bye     : exit from PiCW.py
                                        |
 ==========================================[ Type 'help' for more details ]====='''[:-1])
 
@@ -414,23 +438,24 @@ def not_imp(act=None):
 
 # command name and its function
 #
-cmds={'TX':       txline,
-      'BEEP':     beep,
-      'STRAIGHT': straight,
-      'PADDLE':   paddle,
-      'KB':       keyboard_send,
-      'XMIT':     xmit_file,
-      'RECORD':   record,
-      'PLAY':     play,
-      'TRAINING': training,
-      'SHOW':     show,
-      'SPEED':    speed,
-      'LOAD':     load_file,
-      'HELP':     display_help,
-      '?':        display_short_help,
-      'BYE':      bye,
-      'EXIT':     bye,
-      'QUIT':     bye}
+cmds={'TX':        txline,
+      'BEEP':      beep,
+      'STRAIGHT':  straight,
+      'PADDLE':    paddle,
+      'KB':        keyboard_send,
+      'XMIT':      xmit_file,
+      'RECORD':    record,
+      'PLAY':      play,
+      'TRAINING':  training,
+      'SHOW':      show,
+      'SPEED':     speed,
+      'LETTERGAP': lettergap,
+      'LOAD':      load_file,
+      'HELP':      display_help,
+      '?':         display_short_help,
+      'BYE':       bye,
+      'EXIT':      bye,
+      'QUIT':      bye}
 
 # command line parser
 #
@@ -439,7 +464,10 @@ def parser(line):
     # in WPM, CPM or QRS
     #
     if re.match(r"[0-9.]+", line):
-        key.setspeed(utl.speed2float(line))
+        try:
+            key.setspeed(utl.speed2float(line))
+        except:
+            pass # in case of float() fails
         return True
 
     # change speed by +/- 5%

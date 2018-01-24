@@ -26,6 +26,7 @@ codetab = {'a': ".-",      'b': "-...",    'c': "-.-.",    'd': "-..",     'e': 
            ' ': " ",
            '0': "-----",   '1': ".----",   '2': "..---",   '3': "...--",   '4': "....-",
            '5': ".....",   '6': "-....",   '7': "--...",   '8': "---..",   '9': "----.",
+
            '.': ".-.-.-",  ',': "--..--",  ':': "---...",  '?': "..--..",  "'": ".----.",
            '-': "-....-",  '/': "-..-.",   '(': "-.--.",   ')': "-.--.-",  '"': ".-..-.",
            '=': "-...-",   '+': ".-.-.",   '*': "-..-",    '@': ".--.-."}
@@ -52,7 +53,7 @@ def chars(chrs):
     key.cspc()
 
 # send string as a morse code
-#     in text, substring such as {BT} represents concatenated symbol
+#     in text, substring such as [BT] represents concatenated symbol
 #
 #     returns False when whole text not sent
 #
@@ -67,14 +68,14 @@ def sendstr(text):
             sys.stdout.write(ch.upper())
             sys.stdout.flush()
             if concsym:
-                if ch == '}':
+                if ch == ']':
                     chars(concword)
                     concsym =False
                     concword=''
                 else:
                     concword=concword + ch
             else:
-                if ch == '{':
+                if ch == '[':
                     concsym =True
                     concword=''
                 else:
