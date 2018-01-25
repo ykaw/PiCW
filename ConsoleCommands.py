@@ -90,6 +90,24 @@ def paddle(ptype=None):
     print('Paddle type is set to', paddletype)
     return True
 
+# Console Command - IAMBIC
+#
+#     set iambic operation mode
+#
+def iambic(mode=None):
+    if mode==None:
+        print('Iambic operation mode is type', 'B.' if pdl.modeB else 'A.')
+        return True
+
+    if mode.upper()=='A':
+        pdl.modeB=False
+        print('Iambic operation mode is set to A.')
+    elif mode.upper()=='B':
+        pdl.modeB=True
+        print('Iambic operation mode is set to B.')
+
+    return True
+
 # Console Command - KB
 #
 #     transmit keyboard input directly
@@ -250,6 +268,7 @@ def show(act=None):
     print('                  Side tone:', 'ON' if key.beep_enable else 'OFF', ', freq', port.get_beepfreq(), 'Hz')
     print('               Straight key:', 'ON' if stk.getaction else 'OFF')
     print('              Paddle action:', paddletype)
+    print('                Iambic Type:', 'Mode B' if pdl.modeB else 'Mode A')
     print('              Record keying:', 'ON' if mem.recording else 'OFF')
     return True
 
@@ -361,6 +380,8 @@ paddle [OFF|IAMBIC|IAMBIC-REV|BUG|BUG-REV|SIDESWIPER]
                        or enable the paddle by specified type
                        *-rev swaps dot/dash paddle.
 
+iambic [A|B]        :  operation mode of imabic paddle
+
 kb                  :  enter keyboard transmit mode
                        By pressing <ESC> or '$',
                        you can exit from this mode.
@@ -410,16 +431,16 @@ number   : set speed                   |
 "<", ">" : slower/faster               |
 " "text  : transmit text directly      |
                                        |
-                                       |
-tx [off|on]        : TX control line   |play [speed]        : replay keying
-beep [off|on|freq] : side tone         |training <CHARTYPES>: training mode
-straight [off|on]  : straight key      |show                : display settings
-paddle [off|iambic|iambic-rev|bug|     |speed [WPM|CPM|QRS] : toggle WPM/CPM/QRS
-        bug-rev|sideswiper]            |lettergap [gapratio]: letter gap length
-                   : paddle action     |load <file_name>    : load config
+tx [off|on]        : TX control line   |record [on|off]     : record keying
+beep [off|on|freq] : side tone         |play [speed]        : replay keying
+straight [off|on]  : straight key      |training <CHARTYPES>: training mode
+paddle [off|iambic|iambic-rev|bug|     |show                : display settings
+        bug-rev|sideswiper]            |speed [WPM|CPM|QRS] : toggle WPM/CPM/QRS
+                   : paddle action     |lettergap [gapratio]: letter gap length
+iambic [a|b]       : iambic mode       |load <file_name>    : load config
 kb                 : keyboard transmit |help                : display help
 xmit <file_name>   : file transmit     |?                   : display this
-record [on|off]    : record keying     |quit, exit, bye     : exit from PiCW.py
+                                       |quit, exit, bye     : exit from PiCW.py
                                        |
 ==========================================[ Type 'help' for more details ]====='''[:-1])
 
@@ -442,6 +463,7 @@ cmds={'TX':        txline,
       'BEEP':      beep,
       'STRAIGHT':  straight,
       'PADDLE':    paddle,
+      'IAMBIC':    iambic,
       'KB':        keyboard_send,
       'XMIT':      xmit_file,
       'RECORD':    record,
