@@ -1,0 +1,31 @@
+Raspberry Pi
+----------+                                  3.5mm
+          |                 10uF             st jack
+          |     +------+    +| |-          +---O L
+   GPIO18 O-----+1k ohm+-----| |-----------+---O R  Side Tone Out
+   PWM OUT|     +------+     | |      +--------O E
+          |                           |
+          |     +------+              |      LED
+   GPIO22 O-----+330ohm+----------------------->|--+  (future plan:
+       OUT|     +------+              +------------+   TX control)
+          |                           |
+          |     +------+              |
+   GPIO23 O-----+1k ohm+-------------------+ Paddle
+        IN|     +------+              |    +---O Dot
+          |                           +--------O Common
+          |     +------+              |    +---O Dash
+   GPIO24 O-----+1k ohm+-------------------+
+        IN|     +------+              |
+          |                           |      Straight
+          |     +------+              |      Key
+   GPIO25 O-----+1k ohm+-----------------------O Hot
+        IN|     +------+              +--------O Cold
+          |                           |
+          |                           |
+      GND O---------------------------+
+          |
+----------+
+
+All GPIO inputs are
+pulled up internally
+by software configuration.

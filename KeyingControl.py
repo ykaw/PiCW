@@ -1,7 +1,6 @@
 # KeyingControl - Abstraction Layer for Keying
 
 import time
-import pigpio
 import InputOutputPort as port
 import MemoryKeyer     as mem
 

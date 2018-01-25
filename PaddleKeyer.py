@@ -5,6 +5,7 @@ import InputOutputPort as port
 import KeyingControl   as key
 import StraightKeyer   as stk
 import TextKeyer       as txt
+import CwUtilities     as utl
 
 # states of a paddle
 #
@@ -35,17 +36,17 @@ def keying_iambic():
     def send(k):
         if k==PADDLE_DOT:
             key.dot()
-            #    If Straight key is also being pressed,
-            #    decrease speed
-            #
-            if stk.pressing:
-                key.setspeed(key.getspeed()/1.05)
+            # If Straight key is also being pressed,
+            # decrease speed
+            if stk.pressing and tune_speed:
+                key.setspeed(key.getspeed()-0.5)
+                print('<', utl.speedstr(), '>', sep='')
         elif k==PADDLE_DASH:
             key.dash()
-            #    increase speed as of dot
-            #
-            if stk.pressing:
-                key.setspeed(key.getspeed()*1.157) # 1.05**3
+            # increase speed as of dot
+            if stk.pressing and tune_speed:
+                key.setspeed(key.getspeed()+1.5)
+                print('<', utl.speedstr(), '>', sep='')
 
     # returns opposite paddle
     #
@@ -142,15 +143,47 @@ def dash_action(state):
         pressing_dash=False
         trig_paddle=PADDLE_NONE # ignore releasing
 
-# initial port bindings
+# property for every paddle type
 #
-port.bind(port.In_A, dot_action)
-port.bind(port.In_B, dash_action)
+#         paddle        ----------actions for-----------  Is speed
+#         type          In_A             In_B             tunable?
+typetab={'OFF':        [stk.null_action, stk.null_action, False],
+         'IAMBIC':     [dot_action,      dash_action,     True],
+         'IAMBIC-REV': [dash_action,     dot_action,      True],
+         'BUG':        [dot_action,      stk.action,      False],
+         'BUG-REV':    [stk.action,      dot_action,      False],
+         'SIDESWIPER': [stk.action,      stk.action,      False]}
+
+# set paddle type
+#   returns True if setting succeeded
+#
+def settype(ptype):
+    global paddle_type
+    global tune_speed
+
+    ptype=ptype.upper()
+    if ptype in typetab.keys():
+        port.bind(port.In_A, typetab[ptype][0])
+        port.bind(port.In_B, typetab[ptype][1])
+        paddle_type=ptype
+        tune_speed=typetab[ptype][2]
+        return True
+    else:
+        return False
+
+# return paddle type
+#
+def gettype():
+    return paddle_type
 
 # activate iambic subthread
 #
 iambic=threading.Thread(target=keying_iambic)
 iambic.start()
+
+# initial port bindings
+#
+settype('IAMBIC')
 
 # terminate process
 #

@@ -10,6 +10,7 @@ import os.path
 import InputOutputPort as port
 import PaddleKeyer     as pdl
 import CwUtilities     as utl
+import MemoryKeyer     as mem
 import ConsoleCommands as cmd
 
 print("Welcome to PiCW.py")
@@ -31,7 +32,9 @@ while True:
     # read user's input
     #
     try:
-        line=input("\n"+utl.speedstr()+":")
+        line=input("\n"+utl.speedstr()+\
+                   ('/REC' if mem.recording else '')+\
+                   ':')
         print()
     except KeyboardInterrupt:
         continue

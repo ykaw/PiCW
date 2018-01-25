@@ -60,34 +60,18 @@ def straight(act=None):
     stk.setaction(togglecmd(act, 'Straight key', stk.getaction()))
     return True
 
-paddletype='IAMBIC' # kludge, yet
-
 # Console Command - PADDLE
 #
 def paddle(ptype=None):
-    def settype(act_A, act_B):
-        port.bind(port.In_A, act_A)
-        port.bind(port.In_B, act_B)
-
-    global paddletype
-
     if ptype==None:
-        print('Paddle type is', paddletype)
+        print('Paddle type is ', pdl.gettype(), '.', sep='')
         return True
 
-    ptype=ptype.upper()
-    if ptype=='OFF':          settype(stk.null_action, stk.null_action)
-    elif ptype=='IAMBIC':     settype(pdl.dot_action,  pdl.dash_action)
-    elif ptype=='IAMBIC-REV': settype(pdl.dash_action, pdl.dot_action)
-    elif ptype=='BUG':        settype(pdl.dot_action,  stk.action)
-    elif ptype=='BUG-REV':    settype(stk.action,      pdl.dot_action)
-    elif ptype=='SIDESWIPER': settype(stk.action,      stk.action)
+    if pdl.settype(ptype):
+        print('Paddle type is set to ', pdl.gettype(), '.', sep='')
     else:
         print('? unknown paddle type -', ptype)
-        print('  Paddle type is one of OFF, IAMBIC, IAMBIC-REV, BUG, BUG-REV and SIDESWIPER.')
-
-    paddletype=ptype
-    print('Paddle type is set to', paddletype)
+        print('  Paddle type is one of ' , ', '.join(sorted(pdl.typetab.keys())), '.', sep='')
     return True
 
 # Console Command - IAMBIC
@@ -116,11 +100,11 @@ def iambic(mode=None):
 def keyboard_send(act=None):
     def charfunc(ch):
         if ch=='>':
-            key.setspeed(1.05*key.getspeed())
+            key.setspeed(key.getspeed()+0.5)
             print('<'+utl.speedstr()+'>', end='')
             sys.stdout.flush()
         elif ch=='<':
-            key.setspeed(key.getspeed()/1.05)
+            key.setspeed(key.getspeed()-0.5)
             print('<'+utl.speedstr()+'>', end='')
             sys.stdout.flush()
         elif ch=="\x08" or ch=="\x7f":
@@ -266,8 +250,8 @@ def show(act=None):
     print('   Gap between every letter:', key.getlettergap(), 'of dots.')
     print('                 TX control:', 'ON' if key.tx_enable else 'OFF')
     print('                  Side tone:', 'ON' if key.beep_enable else 'OFF', ', freq', port.get_beepfreq(), 'Hz')
-    print('               Straight key:', 'ON' if stk.getaction else 'OFF')
-    print('              Paddle action:', paddletype)
+    print('               Straight key:', 'ON' if stk.getaction() else 'OFF')
+    print('                Paddle type:', pdl.gettype())
     print('                Iambic Type:', 'Mode B' if pdl.modeB else 'Mode A')
     print('              Record keying:', 'ON' if mem.recording else 'OFF')
     return True
@@ -416,7 +400,7 @@ quit, exit, bye     :  exit from PiCW.py
 Note:
     When computer transmits text message,
     you can break that by pressing Control-C
-    or by pressing a straight key or any paddle lever.'''[:-1])
+    or by pressing a straight key or any paddle lever.''')
 
     return True
 
@@ -442,7 +426,7 @@ kb                 : keyboard transmit |help                : display help
 xmit <file_name>   : file transmit     |?                   : display this
                                        |quit, exit, bye     : exit from PiCW.py
                                        |
-==========================================[ Type 'help' for more details ]====='''[:-1])
+==========================================[ Type 'help' for more details ]=====''')
 
     return True
 
@@ -492,10 +476,10 @@ def parser(line):
             pass # in case of float() fails
         return True
 
-    # change speed by +/- 5%
+    # change speed by +/- 0.5WPM
     #
     elif re.match(r"[<>]+$", line):
-        key.setspeed(key.getspeed()*pow(1.05, line.count('>')-line.count('<')))
+        key.setspeed(key.getspeed()+(0.5*(line.count('>')-line.count('<'))))
         return True
 
     # send text message using TextKeyer module
