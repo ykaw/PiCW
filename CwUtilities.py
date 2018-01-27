@@ -85,3 +85,26 @@ class ProgressBar():
     def end(self, fullfill=False):
         if 1<=self.barlen:
             print(('*' if fullfill else ' ') * self.diff(self.maxval), '|', sep='')
+
+# create completion function
+# for GNU readline
+#
+class rlComplete():
+    def __init__(self, words):
+        self.cmds=words[:]
+
+    def func(self, text, state):
+        if state==0:
+            if text=='':
+                self.matches=[cmd.upper()+' '
+                              for cmd in self.cmds]
+            else:
+                self.matches=[cmd.upper()+' '
+                              for cmd in self.cmds
+                              if cmd.startswith(text.upper())]
+        try:
+            retval=self.matches[state]
+        except IndexError:
+            retval=None
+
+        return retval

@@ -5,7 +5,6 @@
 #   Yoshihiro Kawamata
 #       (kaw@on.rim.or.jp, ex JH0NUQ)
 
-import readline
 import os.path
 import InputOutputPort as port
 import PaddleKeyer     as pdl
@@ -14,7 +13,8 @@ import MemoryKeyer     as mem
 import ConsoleCommands as cmd
 
 print("Welcome to PiCW.py")
-print("  Type '?' for the short help.")
+print("  '?'   for the short help.")
+print("  <TAB> for command completion.")
 
 # load initial configuration file
 #

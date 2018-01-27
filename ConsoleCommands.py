@@ -3,6 +3,7 @@
 import re
 import subprocess
 import time
+import readline
 import random; random.seed()
 import InputOutputPort as port
 import KeyingControl   as key
@@ -454,6 +455,11 @@ cmds={'TX':        txline,
       'BYE':       bye,
       'EXIT':      bye,
       'QUIT':      bye}
+
+# for TAB completion
+#
+readline.set_completer(utl.rlComplete(sorted(cmds.keys())).func)
+readline.parse_and_bind('tab: complete')  # enable TAB for completion
 
 # command line parser
 #
