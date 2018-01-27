@@ -3,6 +3,7 @@
 import sys
 import InputOutputPort as port
 import KeyingControl   as key
+import CwUtilities     as utl
 
 # function table for dot, dash, and word space
 #
@@ -45,10 +46,24 @@ codetab.update(codetab_upper)
 #
 def chars(chrs):
     for ch in list(chrs):
-        if ch in codetab:
+        if ch=='>':
+            key.setspeed(key.getspeed()+0.5)
+            print('<'+utl.speedstr()+'>', end='')
+            sys.stdout.flush()
+            return
+        elif ch=='<':
+            key.setspeed(key.getspeed()-0.5)
+            print('<'+utl.speedstr()+'>', end='')
+            sys.stdout.flush()
+            return
+        elif ch in codetab:
+            sys.stdout.write(ch.upper())
+            sys.stdout.flush()
             for dd in list(codetab[ch]):
                 functab[dd]()
         else:
+            print(' ', end='')
+            sys.stdout.flush()
             key.wspc()
     key.cspc()
 
@@ -65,11 +80,12 @@ def sendstr(text):
         try:
             if key.abort_requested():
                 return False
-            sys.stdout.write(ch.upper())
-            sys.stdout.flush()
             if concsym:
                 if ch == ']':
+                    print('[', end='')
                     chars(concword)
+                    print(']', end='')
+                    sys.stdout.flush()
                     concsym =False
                     concword=''
                 else:

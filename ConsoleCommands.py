@@ -1,7 +1,6 @@
 # ConsoleCommands  -  commands called by command line parser
 
 import re
-import sys
 import subprocess
 import time
 import random; random.seed()
@@ -99,18 +98,11 @@ def iambic(mode=None):
 #
 def keyboard_send(act=None):
     def charfunc(ch):
-        if ch=='>':
-            key.setspeed(key.getspeed()+0.5)
-            print('<'+utl.speedstr()+'>', end='')
-            sys.stdout.flush()
-        elif ch=='<':
-            key.setspeed(key.getspeed()-0.5)
-            print('<'+utl.speedstr()+'>', end='')
-            sys.stdout.flush()
-        elif ch=="\x08" or ch=="\x7f":
+        if ch=="\x08" or ch=="\x7f":
             txt.sendstr('[HH]')
         else:
             txt.sendstr(ch)
+
 
     print('Entering keyboard transmission mode...')
     print("    '$', <ESC> or Ctrl-C  - exit this mode.")
@@ -245,7 +237,7 @@ def training(*chartypes):
 #     display parameter settings
 #
 def show(act=None):
-    print('Current setteings:')
+    print('Current settings:')
     print('  Paddle and computer speed:', utl.speedstr())
     print('   Gap between every letter:', key.getlettergap(), 'of dots.')
     print('                 TX control:', 'ON' if key.tx_enable else 'OFF')

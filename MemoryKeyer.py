@@ -35,8 +35,11 @@ def recstop():
         return False
 
     recording=False
-    tstamp.append(tstamp[-1]+0.1)
-    keystat.append(key.RELEASED)
+    try:
+        tstamp.append(tstamp[-1]+0.1)
+        keystat.append(key.RELEASED)
+    except IndexError:
+        pass
     print('Stop recording.')
     return True
 
@@ -52,9 +55,11 @@ def replay(speed, barlen=0):
         return False
 
     if not tstamp:
+        print('? nothing to play')
         return False
 
     print('Replay keying:', len(tstamp), 'marks and spaces...')
+    print('(Dots or marks longer than', len(tstamp), 'seconds will be trucated)')
 
     # setups for progress bar
     #
@@ -62,7 +67,7 @@ def replay(speed, barlen=0):
         progbar=utl.ProgressBar(barlen, int(len(tstamp)))
         progbar.begin()
 
-        barstep=int(len(tstamp)/barlen)  # frequency of bar update
+        barstep=int(len(tstamp)/barlen/2)+1  # frequency of bar update
         barcount=0
 
     try:
