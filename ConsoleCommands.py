@@ -108,7 +108,7 @@ def keyboard_send(act=None):
     print('Entering keyboard transmission mode...')
     print("    '$', <ESC> or Ctrl-C  - exit this mode.")
     print("              (or Press straight or paddle.)")
-    print("    '<' or '>'            - change speed by 5%")
+    print("    '<' or '>'            - change speed by 0.5WPM")
     print("    <BS> or <Delete>      - send [HH]")
 
     # start transmission
@@ -157,6 +157,7 @@ def play(speed=None):
 #
 def xmit_file(filename=None):
     if filename==None:
+        print('? no file name given')
         return True
 
     try:
@@ -306,6 +307,7 @@ def lettergap(gaprate=None):
 #
 def load_file(filename=None):
     if filename==None:
+        print('? no file name given')
         return True
 
     try:
@@ -333,13 +335,11 @@ a number:
 
 some "<" or ">" characters:
             change speed by numbers of character
-                "<" ... 5% slower
-                ">" ... 5% faster
+                "<" ... 0.5WPM slower
+                ">" ... 0.5WPM faster
 
-            example:  ">>>>" means 1.05*1.05*1.05*1.05 = 1.216
-                             ... 22% faster
-                        "<<" means 1/1.05/1.05 = 0.907
-                             ... 10% slower
+            example:  ">>>>>>" means 3.0WPM faster
+                         "<<<" means 1.5WPM slower
 
 text string beginning with a space:
             transmit the text string directly
@@ -458,7 +458,8 @@ cmds={'TX':        txline,
 
 # for TAB completion
 #
-readline.set_completer(utl.rlComplete(sorted(cmds.keys())).func)
+compl=utl.rlComplete(sorted(cmds.keys()))
+readline.set_completer(compl.func)
 readline.parse_and_bind('tab: complete')  # enable TAB for completion
 
 # command line parser

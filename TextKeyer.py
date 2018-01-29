@@ -62,7 +62,7 @@ def chars(chrs):
             for dd in list(codetab[ch]):
                 functab[dd]()
         else:
-            print(' ', end='')
+            print(ch, end='')
             sys.stdout.flush()
             key.wspc()
     key.cspc()

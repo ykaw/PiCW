@@ -1,3 +1,5 @@
+=====[Schematic Diagram]================================================
+
 Raspberry Pi
 ----------+                                  3.5mm
           |                 10uF             st jack
@@ -7,25 +9,41 @@ Raspberry Pi
           |                           |
           |     +------+              |      LED
    GPIO22 O-----+330ohm+----------------------->|--+  (future plan:
-       OUT|     +------+              +------------+   TX control)
-          |                           |
-          |     +------+              |
-   GPIO23 O-----+1k ohm+-------------------+ Paddle
-        IN|     +------+              |    +---O Dot
+       OUT|     +------+              |            |   TX control)
+          |                           +------------+
+          |     +------+              |      Paddle
+   GPIO23 O-----+1k ohm+-----------------------O Dot
+        IN|     +------+              |
           |                           +--------O Common
-          |     +------+              |    +---O Dash
-   GPIO24 O-----+1k ohm+-------------------+
+          |     +------+              |
+   GPIO24 O-----+1k ohm+-----------------------O Dash
         IN|     +------+              |
           |                           |      Straight
           |     +------+              |      Key
    GPIO25 O-----+1k ohm+-----------------------O Hot
-        IN|     +------+              +--------O Cold
-          |                           |
+        IN|     +------+              |
+          |                           +--------O Cold
           |                           |
       GND O---------------------------+
           |
 ----------+
-
 All GPIO inputs are
 pulled up internally
 by software configuration.
+
+=====[Python Modules]===================================================
+
+PiCW.py                      - main program
+ConsoleCommands.py           - command line parser and its commands
+MemoryKeyer.py               - record and replay of keying
+TextKeyer.py                 - keying Morse code by text string
+PaddleKeyer.py               - handlings for paddles
+                              (iambic/bug/sideswiper)
+StraightKeyer.py             - handlings for straing key
+KeyingControl.py             - functions for keying Morse code
+InputOutputPort.py           - symlink to any GPIO library
+InputOutputPort_pigpio.py    - interface to pigpio GPIO library
+InputOutputPort_RPi_GPIO.py  - interface to RPi_GPIO library
+CwUtilities.py               - misc functions
+
+========================================================================

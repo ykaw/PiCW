@@ -3,6 +3,7 @@
 import sys
 import tty
 import termios
+import readline
 import KeyingControl   as key
 
 # do something when any key typed
@@ -92,8 +93,20 @@ class ProgressBar():
 class rlComplete():
     def __init__(self, words):
         self.cmds=words[:]
+        self.enabled=True
 
+    # completion function
+    #
     def func(self, text, state):
+        if not self.enabled:
+            return None
+
+        try:
+            if readline.get_line_buffer()[0] in ' <>':
+                return None
+        except:
+            pass
+
         if state==0:
             if text=='':
                 self.matches=[cmd.upper()+' '
@@ -108,3 +121,13 @@ class rlComplete():
             retval=None
 
         return retval
+
+    # disable completion temporarily
+    #
+    def disable(self):
+        self.enabled=False
+
+    # enable completion again
+    #
+    def enable(self):
+        self.enabled=True
