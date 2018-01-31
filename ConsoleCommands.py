@@ -4,6 +4,8 @@ import re
 import subprocess
 import time
 import readline
+import sys
+import os
 import random; random.seed()
 import InputOutputPort as port
 import KeyingControl   as key
@@ -97,7 +99,7 @@ def iambic(mode=None):
 #     transmit keyboard input directly
 #     and change speed interactively
 #
-def keyboard_send(act=None):
+def kb_send(act=None):
     def charfunc(ch):
         if ch=="\x08" or ch=="\x7f":
             txt.sendstr('[HH]')
@@ -325,9 +327,9 @@ def load_file(filename=None):
 
 # Console Command - HELP
 #
-#     display command help
+#     display command long_help
 #
-def display_help(act=None):
+def long_help(act=None):
     print('''PiCW.py command help:
 
 a number:
@@ -401,7 +403,7 @@ Note:
 #
 #     display brief command help
 #
-def display_short_help(act=None):
+def short_help(act=None):
     print('''=====[ PiCW.py commands ]======================================================
                                        |
 number   : set speed                   |
@@ -435,32 +437,166 @@ def not_imp(act=None):
     return True
 
 # command name and its function
+#   key:   name of command
+#   'fn':  called function
+#   'arg': parameter to be completed, 'file' means file completion
 #
-cmds={'TX':        txline,
-      'BEEP':      beep,
-      'STRAIGHT':  straight,
-      'PADDLE':    paddle,
-      'IAMBIC':    iambic,
-      'KB':        keyboard_send,
-      'XMIT':      xmit_file,
-      'RECORD':    record,
-      'PLAY':      play,
-      'TRAINING':  training,
-      'SHOW':      show,
-      'SPEED':     speed,
-      'LETTERGAP': lettergap,
-      'LOAD':      load_file,
-      'HELP':      display_help,
-      '?':         display_short_help,
-      'BYE':       bye,
-      'EXIT':      bye,
-      'QUIT':      bye}
+cmds={'TX':        {'fn': txline,     'arg': ['OFF', 'ON']},
+      'BEEP':      {'fn': beep,       'arg': ['OFF',   'ON', '8000', '4000', '2000', '1600',
+                                              '1000', '800',  '500',  '400',  '320',  '250',
+                                               '200', '160',  '100',   '80',   '50',   '40',
+                                                '20',  '10']},
+      'STRAIGHT':  {'fn': straight,   'arg': ['OFF', 'ON']},
+      'PADDLE':    {'fn': paddle,     'arg': ['OFF', 'IAMBIC', 'BUG', 'SIDESWIPER']},
+      'IAMBIC':    {'fn': iambic,     'arg': ['A', 'B']},
+      'KB':        {'fn': kb_send,    'arg': None},
+      'XMIT':      {'fn': xmit_file,  'arg': 'file'},
+      'RECORD':    {'fn': record,     'arg': ['OFF', 'ON']},
+      'PLAY':      {'fn': play,       'arg': None},
+      'TRAINING':  {'fn': training,   'arg': None},
+      'SHOW':      {'fn': show,       'arg': None},
+      'SPEED':     {'fn': speed,      'arg': None},
+      'LETTERGAP': {'fn': lettergap,  'arg': None},
+      'LOAD':      {'fn': load_file,  'arg': 'file'},
+      'HELP':      {'fn': long_help,  'arg': None},
+      '?':         {'fn': short_help, 'arg': None},
+      'BYE':       {'fn': bye,        'arg': None},
+      'EXIT':      {'fn': bye,        'arg': None},
+      'QUIT':      {'fn': bye,        'arg': None}}
 
-# for TAB completion
+# create completion function
+# for GNU readline
 #
-compl=utl.rlComplete(sorted(cmds.keys()))
-readline.set_completer(compl.func)
+class rlComplete():
+
+    # return candidates of filecompletion
+    # from given path
+    #
+    def cand_path(self, path):
+        # split path into dirname and basename
+        #
+        try:
+            lastslash=[i for i in range(len(path)) if path[i]=='/'][-1]
+            if lastslash==0:  # only slash at head
+                dirpart='/'
+                basepart=path[1:]
+            else:
+                dirpart=path[:lastslash]
+                basepart=path[lastslash+1:]
+        except IndexError:  # no slash in path
+            dirpart='.'
+            basepart=path
+
+        candidates=[]  # return value
+
+        # scan dirpart and pick up
+        # candidates in it
+        #
+        if os.path.isdir(dirpart):
+            for f in os.listdir(dirpart):
+                if f.startswith(basepart):
+                    cand=dirpart+'/'+f
+                    if os.path.isdir(cand):
+                        cand=cand+'/'
+                    if cand.startswith('//'):
+                        cand=cand[1:]
+                    if cand.startswith('./'):
+                        cand=cand[2:]
+                    candidates.append(cand)
+        return candidates
+
+    # constructor
+    #
+    def __init__(self, cmds):
+        self.cmds=cmds
+        self.cmdnames=sorted(self.cmds.keys())
+        self.enable()
+
+    # get and return candidates
+    #
+    def getcand(self, text, state):
+        #print('getcand({},{})'.format(text, state))
+
+        if not self.enabled:
+            return None
+
+        try:
+            if readline.get_line_buffer()[0] in ' <>':
+                return None
+        except:
+            pass
+
+        try:
+            #(cmd, param) = ('', '')
+            cmd=''
+            cmd   = readline.get_line_buffer().split()[0]
+            #param= readline.get_line_buffer().split()[1]  # maybe unused...
+        except:
+            pass
+        #print('(line,  cmd, param)=({},{},{})'.format(readline.get_line_buffer(), cmd, param))
+        #print('(begin, end, fragw)=({},{},{})'.format(readline.get_begidx(), readline.get_endidx(),
+        #                                              readline.get_line_buffer()[readline.get_begidx():readline.get_endidx()]))
+
+        if state==0:
+            if readline.get_begidx()<=0:  # completing first word (command)
+                if text=='':
+                    self.matches=[name+' '
+                                  for name in self.cmdnames]
+                else:
+                    self.matches=[name+' '
+                                  for name in self.cmdnames
+                                  if name.startswith(text.upper())]
+            else:  # completing second word (parameter)
+                try:
+                    if isinstance(self.cmds[cmd.upper()]['arg'], list):
+                        if text=='':
+                            self.matches=[value
+                                          for value in self.cmds[cmd]['arg']]
+                        else:
+                            self.matches=[value
+                                          for value in self.cmds[cmd]['arg']
+                                          if value.startswith(text.upper())]
+                    elif self.cmds[cmd.upper()]['arg']=='file':
+                        #print('searching file path')
+                        self.matches=self.cand_path(text)
+                    else:
+                        #print('ELSE case')
+                        self.matches=[]
+                except:
+                    self.matches=[]
+
+        try:
+            retval=self.matches[state]
+        except IndexError:
+            retval=None
+
+        #print('=>"{}"'.format(retval))
+        return retval
+
+    # disable completion temporarily
+    #
+    def disable(self):
+        self.enabled=False
+
+    # enable completion again
+    #
+    def enable(self):
+        self.enabled=True
+
+# setups for TAB completion
+#
+compl=rlComplete(cmds)
+readline.set_completer(compl.getcand)
+readline.set_completer_delims(re.sub(r'[-@%=+:,./]',  # these characters are
+                                     '',              # OK for file names
+                                     readline.get_completer_delims()))
 readline.parse_and_bind('tab: complete')  # enable TAB for completion
+
+# for debug rlComplete
+#
+#compl.getcand('', 0)         # test for getcand() state transient
+#print(compl.cand_path('t'))  # test for cand_path()
+#sys.exit()
 
 # command line parser
 #
@@ -496,7 +632,7 @@ def parser(line):
             cmd=params.pop(0).upper()
             if cmd in cmds.keys():
                 key.reset_abort_request()
-                return cmds[cmd](*params)
+                return cmds[cmd]['fn'](*params)
             else:
                 print("? Eh")
                 return True

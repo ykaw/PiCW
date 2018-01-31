@@ -13,7 +13,7 @@ def action(state):
     #
     if state==key.PRESSED:
         key.mark()
-        key.abort_request() # request to abort message keyer
+        key.abort_request() # request to abort text keyer
         pressing=True
     elif state==key.RELEASED:
         key.space()
@@ -21,13 +21,14 @@ def action(state):
 
 # callback function to do nothing
 #
-def null_action(port):
-    key.abort_request()
+def null_action(state):
+    if state==key.PRESSED:
+        key.abort_request()
 
 # initialization
 #
 def getaction():
-    return not not actstat
+    return not not actstat  # to make return value to bool
 
 def setaction(newact):
     global actstat
