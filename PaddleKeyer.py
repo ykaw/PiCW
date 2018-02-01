@@ -4,7 +4,6 @@ import threading
 import InputOutputPort as port
 import KeyingControl   as key
 import StraightKeyer   as stk
-import TextKeyer       as txt
 import CwUtilities     as utl
 
 # states of a paddle

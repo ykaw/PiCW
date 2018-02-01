@@ -4,7 +4,6 @@ import re
 import subprocess
 import time
 import readline
-import sys
 import os
 import random; random.seed()
 import InputOutputPort as port
@@ -128,9 +127,9 @@ def record(act=None):
         print('Keying is ', '' if mem.recording else 'not ', 'being recorded.', sep='')
         return True
 
-    if act.upper()=='ON':
+    if act.upper() in ['ON', 'START']:
         mem.recstart()
-    elif act.upper()=='OFF':
+    elif act.upper() in ['OFF', 'STOP']:
         mem.recstop()
 
     return True
@@ -257,32 +256,27 @@ def show(act=None):
 #     change speed unit
 #
 def speed(act=None):
+    def unitword (unit):
+        try:
+            return {'CPM': 'character per minute',
+                    'WPM': 'words per minute',
+                    'QRS': 'dot duration in second'}[unit]
+        except:
+            return ''
+
     if act==None:
-        if utl.speed_unit=='CPM':
-            print('Speed unit is CPM (characters per minute).')
-        elif utl.speed_unit=='WPM':
-            print('Speed unit is WPM (words per minute).')
-        elif utl.speed_unit=='QRS':
-            print('Speed unit is QRS (dot duration in seccond).')
+        print('Speed unit is ', utl.speed_unit, ' (',
+              unitword(utl.speed_unit), ').', sep='')
         return True
 
-    if act.upper()=='CPM':
-        utl.speed_unit='CPM'
-    elif act.upper()=='WPM':
-        utl.speed_unit='WPM'
-    elif act.upper()=='QRS':
-        utl.speed_unit='QRS'
+    if act.upper() in ('CPM', 'WPM', 'QRS'):
+        utl.speed_unit=act.upper()
     else:
         print('? unknown speed unit')
         return True
 
-    if utl.speed_unit=='CPM':
-        print('Speed unit changed to CPM (characters per minute).')
-    elif utl.speed_unit=='WPM':
-        print('Speed unit changed to WPM (words per minute).')
-    elif utl.speed_unit=='QRS':
-        print('Speed unit changed to QRS (dot duration in seccond).')
-
+    print('Speed unit is set to ', utl.speed_unit, ' (',
+          unitword(utl.speed_unit), ').', sep='')
     return True
 
 # Console Command - LETTERGAP
@@ -367,7 +361,9 @@ kb                  :  enter keyboard transmit mode
 
 xmit <file_name>    :  transmit contets of text file
 
-recording [OFF|ON]  :  start/stop record of keying
+recording [OFF|ON|  :  start/stop record of keying
+          STOP|START]  OFF and STOP are the same,
+                       ON and START, too.
 
 play [speed]        :  replay keying with the speed
 
@@ -409,12 +405,12 @@ def short_help(act=None):
 number   : set speed                   |
 "<", ">" : slower/faster               |
 " "text  : transmit text directly      |
-                                       |
-tx [off|on]        : TX control line   |record [on|off]     : record keying
+                                       |record [on|off|start: record keying
+tx [off|on]        : TX control line   |       |stop]
 beep [off|on|freq] : side tone         |play [speed]        : replay keying
 straight [off|on]  : straight key      |training <CHARTYPES>: training mode
 paddle [off|iambic|iambic-rev|bug|     |show                : display settings
-        bug-rev|sideswiper]            |speed [WPM|CPM|QRS] : toggle WPM/CPM/QRS
+        bug-rev|sideswiper]            |speed [WPM|CPM|QRS] : toggle speed unit
                    : paddle action     |lettergap [gapratio]: letter gap length
 iambic [a|b]       : iambic mode       |load <file_name>    : load config
 kb                 : keyboard transmit |help                : display help
@@ -438,31 +434,35 @@ def not_imp(act=None):
 
 # command name and its function
 #   key:   name of command
-#   'fn':  called function
-#   'arg': parameter to be completed, 'file' means file completion
+#   FN:  called function
+#   ARG: parameter to be completed, ARG_FILE means file completion
 #
-cmds={'TX':        {'fn': txline,     'arg': ['OFF', 'ON']},
-      'BEEP':      {'fn': beep,       'arg': ['OFF',   'ON', '8000', '4000', '2000', '1600',
-                                              '1000', '800',  '500',  '400',  '320',  '250',
-                                               '200', '160',  '100',   '80',   '50',   '40',
-                                                '20',  '10']},
-      'STRAIGHT':  {'fn': straight,   'arg': ['OFF', 'ON']},
-      'PADDLE':    {'fn': paddle,     'arg': ['OFF', 'IAMBIC', 'BUG', 'SIDESWIPER']},
-      'IAMBIC':    {'fn': iambic,     'arg': ['A', 'B']},
-      'KB':        {'fn': kb_send,    'arg': None},
-      'XMIT':      {'fn': xmit_file,  'arg': 'file'},
-      'RECORD':    {'fn': record,     'arg': ['OFF', 'ON']},
-      'PLAY':      {'fn': play,       'arg': None},
-      'TRAINING':  {'fn': training,   'arg': None},
-      'SHOW':      {'fn': show,       'arg': None},
-      'SPEED':     {'fn': speed,      'arg': None},
-      'LETTERGAP': {'fn': lettergap,  'arg': None},
-      'LOAD':      {'fn': load_file,  'arg': 'file'},
-      'HELP':      {'fn': long_help,  'arg': None},
-      '?':         {'fn': short_help, 'arg': None},
-      'BYE':       {'fn': bye,        'arg': None},
-      'EXIT':      {'fn': bye,        'arg': None},
-      'QUIT':      {'fn': bye,        'arg': None}}
+FN  =1
+ARG =2
+ARG_FILE=3
+
+cmds={'TX':        {FN: txline,     ARG: ['OFF', 'ON']},
+      'BEEP':      {FN: beep,       ARG: ['OFF',   'ON', '8000', '4000', '2000', '1600',
+                                          '1000', '800',  '500',  '400',  '320',  '250',
+                                           '200', '160',  '100',   '80',   '50',   '40',
+                                            '20',  '10']},
+      'STRAIGHT':  {FN: straight,   ARG: ['OFF', 'ON']},
+      'PADDLE':    {FN: paddle,     ARG: ['OFF', 'IAMBIC', 'BUG', 'SIDESWIPER']},
+      'IAMBIC':    {FN: iambic,     ARG: ['A', 'B']},
+      'KB':        {FN: kb_send,    ARG: None},
+      'XMIT':      {FN: xmit_file,  ARG: ARG_FILE},
+      'RECORD':    {FN: record,     ARG: ['OFF', 'ON', 'START', 'STOP']},
+      'PLAY':      {FN: play,       ARG: None},
+      'TRAINING':  {FN: training,   ARG: None},
+      'SHOW':      {FN: show,       ARG: None},
+      'SPEED':     {FN: speed,      ARG: ['CPM', 'WPM', 'QRS']},
+      'LETTERGAP': {FN: lettergap,  ARG: None},
+      'LOAD':      {FN: load_file,  ARG: ARG_FILE},
+      'HELP':      {FN: long_help,  ARG: None},
+      '?':         {FN: short_help, ARG: None},
+      'BYE':       {FN: bye,        ARG: None},
+      'EXIT':      {FN: bye,        ARG: None},
+      'QUIT':      {FN: bye,        ARG: None}}
 
 # create completion function
 # for GNU readline
@@ -515,8 +515,6 @@ class rlComplete():
     # get and return candidates
     #
     def getcand(self, text, state):
-        #print('getcand({},{})'.format(text, state))
-
         if not self.enabled:
             return None
 
@@ -527,18 +525,14 @@ class rlComplete():
             pass
 
         try:
-            #(cmd, param) = ('', '')
             cmd=''
-            cmd   = readline.get_line_buffer().split()[0]
-            #param= readline.get_line_buffer().split()[1]  # maybe unused...
+            cmd=readline.get_line_buffer().split()[0]
         except:
             pass
-        #print('(line,  cmd, param)=({},{},{})'.format(readline.get_line_buffer(), cmd, param))
-        #print('(begin, end, fragw)=({},{},{})'.format(readline.get_begidx(), readline.get_endidx(),
-        #                                              readline.get_line_buffer()[readline.get_begidx():readline.get_endidx()]))
 
         if state==0:
-            if readline.get_begidx()<=0:  # completing first word (command)
+            if readline.get_begidx()<=0:
+                # completing first word (command)
                 if text=='':
                     self.matches=[name+' '
                                   for name in self.cmdnames]
@@ -546,21 +540,22 @@ class rlComplete():
                     self.matches=[name+' '
                                   for name in self.cmdnames
                                   if name.startswith(text.upper())]
-            else:  # completing second word (parameter)
+            else:
+                # completing second word (parameter)
                 try:
-                    if isinstance(self.cmds[cmd.upper()]['arg'], list):
+                    if isinstance(self.cmds[cmd.upper()][ARG], list):
+                        # select from prepared argument list
                         if text=='':
                             self.matches=[value
-                                          for value in self.cmds[cmd]['arg']]
+                                          for value in self.cmds[cmd][ARG]]
                         else:
                             self.matches=[value
-                                          for value in self.cmds[cmd]['arg']
+                                          for value in self.cmds[cmd][ARG]
                                           if value.startswith(text.upper())]
-                    elif self.cmds[cmd.upper()]['arg']=='file':
-                        #print('searching file path')
+                    elif self.cmds[cmd.upper()][ARG]==ARG_FILE:
+                        # get candidates of file path
                         self.matches=self.cand_path(text)
                     else:
-                        #print('ELSE case')
                         self.matches=[]
                 except:
                     self.matches=[]
@@ -570,7 +565,6 @@ class rlComplete():
         except IndexError:
             retval=None
 
-        #print('=>"{}"'.format(retval))
         return retval
 
     # disable completion temporarily
@@ -593,6 +587,8 @@ readline.set_completer_delims(re.sub(r'[-@%=+:,./]',  # these characters are
 readline.parse_and_bind('tab: complete')  # enable TAB for completion
 
 # for debug rlComplete
+#   ... any error caused by rlComplete
+#       is captured in readline
 #
 #compl.getcand('', 0)         # test for getcand() state transient
 #print(compl.cand_path('t'))  # test for cand_path()
@@ -632,7 +628,7 @@ def parser(line):
             cmd=params.pop(0).upper()
             if cmd in cmds.keys():
                 key.reset_abort_request()
-                return cmds[cmd]['fn'](*params)
+                return cmds[cmd][FN](*params)
             else:
                 print("? Eh")
                 return True

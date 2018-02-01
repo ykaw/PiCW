@@ -59,7 +59,7 @@ def replay(speed, barlen=0):
         return False
 
     print('Replay keying:', len(tstamp), 'marks and spaces...')
-    print('(Dots or marks longer than', len(tstamp), 'seconds will be trucated)')
+    print('(Dots or marks longer than', maxdelay, 'seconds will be trucated)')
 
     # setups for progress bar
     #

@@ -1,7 +1,6 @@
 # TextKeyer    - encode text string to morse keying
 
 import sys
-import InputOutputPort as port
 import KeyingControl   as key
 import CwUtilities     as utl
 
