@@ -79,6 +79,21 @@ def set_beepfreq(hz):
     pi.set_PWM_frequency(Out_M, hz)
     pi.set_PWM_dutycycle(Out_M, 0)
 
+# get available side tone frequencies
+#
+def get_avail_beepfreq():
+    saved_freq=get_beepfreq()
+
+    set_beepfreq(50000)    # try too high freq
+    hi_freq=get_beepfreq() # get actual result
+
+    set_beepfreq(saved_freq)  # restore saved setting
+
+    return [int(hi_freq/div_ratio+0.5)
+            for div_ratio in [1, 2, 4, 5, 8,
+                              10, 16, 20, 25, 32, 40, 50, 80,
+                              100, 160, 200, 400, 800]]
+
 # table for callback functions by every input port
 #   empty at initial state
 #

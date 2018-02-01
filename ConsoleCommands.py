@@ -361,8 +361,9 @@ kb                  :  enter keyboard transmit mode
 
 xmit <file_name>    :  transmit contets of text file
 
-recording [OFF|ON|  :  start/stop record of keying
-          STOP|START]  OFF and STOP are the same,
+recording [OFF|ON|STOP|START]
+                    :  start/stop record of keying
+                       OFF and STOP are the same,
                        ON and START, too.
 
 play [speed]        :  replay keying with the speed
@@ -391,7 +392,11 @@ quit, exit, bye     :  exit from PiCW.py
 Note:
     When computer transmits text message,
     you can break that by pressing Control-C
-    or by pressing a straight key or any paddle lever.''')
+    or by pressing a straight key or any paddle lever.
+
+    By pressing sraight key and dot paddle simultaneously,
+    speed of paddle keying goes slow down.
+    Straight key and dash paddle, speed up. '''),
 
     return True
 
@@ -442,12 +447,11 @@ ARG =2
 ARG_FILE=3
 
 cmds={'TX':        {FN: txline,     ARG: ['OFF', 'ON']},
-      'BEEP':      {FN: beep,       ARG: ['OFF',   'ON', '8000', '4000', '2000', '1600',
-                                          '1000', '800',  '500',  '400',  '320',  '250',
-                                           '200', '160',  '100',   '80',   '50',   '40',
-                                            '20',  '10']},
+      'BEEP':      {FN: beep,       ARG: ['OFF', 'ON']+[str(freq)
+                                                        for freq
+                                                        in port.get_avail_beepfreq()]},
       'STRAIGHT':  {FN: straight,   ARG: ['OFF', 'ON']},
-      'PADDLE':    {FN: paddle,     ARG: ['OFF', 'IAMBIC', 'BUG', 'SIDESWIPER']},
+      'PADDLE':    {FN: paddle,     ARG: sorted(pdl.typetab.keys())},
       'IAMBIC':    {FN: iambic,     ARG: ['A', 'B']},
       'KB':        {FN: kb_send,    ARG: None},
       'XMIT':      {FN: xmit_file,  ARG: ARG_FILE},
@@ -586,6 +590,14 @@ readline.set_completer_delims(re.sub(r'[-@%=+:,./]',  # these characters are
                                      readline.get_completer_delims()))
 readline.parse_and_bind('tab: complete')  # enable TAB for completion
 
+# debug stuff
+#
+#import sys
+# for debug rlComplete
+#print(port.get_avail_beepfreq())
+#print(sorted(pdl.typetab.keys()))
+#sys.exit()
+#
 # for debug rlComplete
 #   ... any error caused by rlComplete
 #       is captured in readline

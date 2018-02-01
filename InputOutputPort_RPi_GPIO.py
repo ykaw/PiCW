@@ -68,6 +68,14 @@ def beep_off():
 def get_beepfreq():
     return Freq_M
 
+# get available side tone frequencies
+#
+#   In RPi.GPIO, Freq. of PWM output is
+#   not discrete.
+#
+def get_avail_beepfreq():
+    return []
+
 # set side tone frequency
 #
 def set_beepfreq(hz):
@@ -91,20 +99,18 @@ def bind(in_port, func):
 
     # In RPi.GPIO,
     # a callback function can't know it was called by rise or fall.
-    # So, GPIO.input() will be called in a fallback wrapper function 'func_both'.
-    # But, sometimes, GPIO.input() doesn't return a right value
-    # Then, GPIO.input was called several times, and determine counting by those return
-    # values.
+    # So, GPIO.input() will be called in a fallback wrapper function 'func_both'
+    # to check whether detected edge is rise or fall.
+    # GPIO.input() sometimes returns 1 but the port is inactive.
+    # Therefore, this function takes a few samples with short interval.
     #
     def func_both(port):
-        lev=0
-        for i in range(5):
-            time.sleep(0.005)
-            lev += GPIO.input(port)
-        if 2<lev:
-            func(1)
-        else:
-            func(0)
+        stat=1
+        for i in range(3):     # sampling 3 times
+            time.sleep(0.003)  # at 3ms interval
+            if GPIO.input(port)==0:
+                stat=0  # if it occurs even once
+        func(stat)
 
     if in_port in cb and cb[in_port]==1:
         GPIO.remove_event_detect(in_port)  #  unassign current callback if any
