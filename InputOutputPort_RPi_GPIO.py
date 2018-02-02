@@ -1,10 +1,10 @@
 # InputOutputPort - interface to sense/control hardware port
 
-import time
-
 # This module uses RPi.GPIOlibrary.
 #
 import RPi.GPIO as GPIO
+
+import time
 
 # use Broadcom's GPIO number of BCM2835
 #
@@ -68,6 +68,14 @@ def beep_off():
 def get_beepfreq():
     return Freq_M
 
+# set side tone frequency
+#
+def set_beepfreq(hz):
+    global Freq_M
+
+    Freq_M=hz
+    pwm.ChangeFrequency(Freq_M)
+
 # get available side tone frequencies
 #
 #   In RPi.GPIO, Freq. of PWM output is
@@ -76,13 +84,15 @@ def get_beepfreq():
 def get_avail_beepfreq():
     return []
 
-# set side tone frequency
+# check current port status
 #
-def set_beepfreq(hz):
-    global Freq_M
+def check_port(port):
+    import KeyingControl as key
 
-    Freq_M=hz
-    pwm.ChangeFrequency(Freq_M)
+    if GPIO.input(port)==0:
+        return key.PRESSED
+    else:
+        return key.RELEASED
 
 # table for callback functions by every input port
 #   empty at initial state
@@ -105,11 +115,14 @@ def bind(in_port, func):
     # Therefore, this function takes a few samples with short interval.
     #
     def func_both(port):
-        stat=1
-        for i in range(3):     # sampling 3 times
-            time.sleep(0.003)  # at 3ms interval
+        import KeyingControl as key
+
+        time.sleep(0.002)      # wait for port stable
+        stat=key.RELEASED
+        for i in range(10):    # sampling times
+            time.sleep(0.001)  # at this interval
             if GPIO.input(port)==0:
-                stat=0  # if it occurs even once
+                stat=key.PRESSED  # if it occurs even once
         func(stat)
 
     if in_port in cb and cb[in_port]==1:

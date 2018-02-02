@@ -26,6 +26,7 @@ def wpm2sec(speed):
 #  - dots of bug keyer
 #
 def setspeed(speed):
+    import PaddleKeyer as pdl
     global wpm, dotlen, cgap, wgap, cgap_rate
     if not speed:
         return # even speed is 0
@@ -35,6 +36,8 @@ def setspeed(speed):
         dotlen=wpm2sec(wpm)
         cgap=cgap_rate*dotlen
         wgap=7.0*cgap/3.0
+        # max dots to send for fail-safe (60 sec)
+        pdl.maxdotslen=max(int(60/2/dotlen), 1)
 
 def getspeed():
     return wpm

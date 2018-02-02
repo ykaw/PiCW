@@ -77,7 +77,12 @@ def keying_iambic():
         #
         modeB_sqz=PADDLE_NONE  # first squeezed paddle of every event
         sendkey=trig_paddle    # send by triggered paddle
-        while True:
+
+        # send squeezed key
+        #   or keep pressing
+        #
+        global maxdotslen
+        for i in range(maxdotslen):  # for fail-safe (60 sec max)
             sqz_paddle=PADDLE_NONE  # possibly changed while calling send()
             send(sendkey)
 

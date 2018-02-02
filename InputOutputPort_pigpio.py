@@ -94,6 +94,16 @@ def get_avail_beepfreq():
                               10, 16, 20, 25, 32, 40, 50, 80,
                               100, 160, 200, 400, 800]]
 
+# check current port status
+#
+def check_port(port):
+    import KeyingControl as key
+
+    if pi.read(port)==0:
+        return key.PRESSED
+    else:
+        return key.RELEASED
+
 # table for callback functions by every input port
 #   empty at initial state
 #
@@ -106,10 +116,16 @@ cb={}
 #   func is a function which has only parameter: func(state)
 #
 def bind(in_port, func):
+    import KeyingControl as key
+
     if in_port in cb:
         cb[in_port].cancel()  #  unassign current callback if any
 
-    cb[in_port]=pi.callback(in_port, pigpio.EITHER_EDGE, lambda p, s, t: func(s))
+    cb[in_port]=pi.callback(in_port,
+                            pigpio.EITHER_EDGE,
+                            lambda p, s, t: func(key.PRESSED
+                                                 if s==0
+                                                 else key.RELEASED))
 
 # termination process for this module
 #

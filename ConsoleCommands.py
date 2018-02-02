@@ -156,23 +156,24 @@ def play(speed=None):
 #
 #     transmit the contents of file
 #
-def xmit_file(filename=None):
-    if filename==None:
+def xmit_file(*filenames):
+    if len(filenames)==0:
         print('? no file name given')
         return True
 
-    try:
-        with open(filename, 'rt') as infile:
-            while True:
-                line=infile.readline()
-                if line:
-                    if not (txt.sendstr(line)):
-                        print()
-                        return True
-                else:
-                    break
-    except:
-        print("? Can't open", filename)
+    for txtfile in filenames:
+        try:
+            with open(txtfile, 'rt') as message:
+                while True:
+                    line=message.readline()
+                    if line:
+                        if not (txt.sendstr(line)):
+                            print()
+                            return True
+                    else:
+                        break
+        except:
+            print("? Can't open", txtfile)
 
     return True
 
@@ -359,7 +360,7 @@ kb                  :  enter keyboard transmit mode
                        By pressing <ESC> or '$',
                        you can exit from this mode.
 
-xmit <file_name>    :  transmit contets of text file
+xmit <file_name> ...:  transmit contents of text file
 
 recording [OFF|ON|STOP|START]
                     :  start/stop record of keying
@@ -411,15 +412,15 @@ number   : set speed                   |
 "<", ">" : slower/faster               |
 " "text  : transmit text directly      |
                                        |record [on|off|start: record keying
-tx [off|on]        : TX control line   |       |stop]
-beep [off|on|freq] : side tone         |play [speed]        : replay keying
-straight [off|on]  : straight key      |training <CHARTYPES>: training mode
+tx [off|on]         : TX control line  |       |stop]
+beep [off|on|freq]  : side tone        |play [speed]        : replay keying
+straight [off|on]   : straight key     |training <CHARTYPES>: training mode
 paddle [off|iambic|iambic-rev|bug|     |show                : display settings
         bug-rev|sideswiper]            |speed [WPM|CPM|QRS] : toggle speed unit
-                   : paddle action     |lettergap [gapratio]: letter gap length
-iambic [a|b]       : iambic mode       |load <file_name>    : load config
-kb                 : keyboard transmit |help                : display help
-xmit <file_name>   : file transmit     |?                   : display this
+                    : paddle action    |lettergap [gapratio]: letter gap length
+iambic [a|b]        : iambic mode      |load <file_name>    : load config
+kb                  : keyboard transmit|help                : display help
+xmit <file_name> ...: file transmit    |?                   : display this
                                        |quit, exit, bye     : exit from PiCW.py
                                        |
 ==========================================[ Type 'help' for more details ]=====''')
