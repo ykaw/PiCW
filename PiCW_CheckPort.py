@@ -9,7 +9,7 @@ import InputOutputPort as port
 import KeyingControl   as key
 import StraightKeyer   as stk
 
-# disable controlling all ports
+# disable responses for all input ports
 #
 port.bind(port.In_A, stk.null_action)
 port.bind(port.In_B, stk.null_action)
@@ -22,19 +22,21 @@ port.bind(port.In_C, stk.null_action)
 # activated whole continuously,
 # deactivate the port.
 
-maxcount=30
+maxcount=60
 interval=1
 
+count=0
 while True:
-    while True:
-        count=0
-        for i in (range(maxcount)):
-            stat=port.check_port(port.Out_T)
-            sys.stdout.write(str(stat))
-            sys.stdout.flush()
-            if stat==1:
-                count += 1
-            time.sleep(1)
-        print(' : {:02d}/{:02d}'.format(count, maxcount))
-        if count==maxcount:
-            key.space()
+    for i in (range(maxcount)):
+        time.sleep(interval)
+        stat=port.check_port(port.Out_T)
+        if stat==1:
+            count += 1
+            if maxcount<=count:
+                key.space()
+                count=0
+        else:
+            count=0
+        sys.stdout.write(str(stat))
+        sys.stdout.flush()
+    print(' : {:2d}'.format(count))
