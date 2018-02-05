@@ -81,8 +81,7 @@ def keying_iambic():
         # send squeezed key
         #   or keep pressing
         #
-        global maxdotslen
-        for i in range(maxdotslen):  # for fail-safe (60 sec max)
+        for i in range(key.sendable_dots):  # for fail-safe (60 sec max)
             sqz_paddle=PADDLE_NONE  # possibly changed while calling send()
             send(sendkey)
 

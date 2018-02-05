@@ -22,8 +22,10 @@ port.bind(port.In_C, stk.null_action)
 # activated whole continuously,
 # deactivate the port.
 
-maxcount=60
 interval=1
+
+# sync to timeout of sendable_dots
+maxcount=max(int(key.sendable_dots*key.dotlen*2/interval), 1)
 
 count=0
 while True:

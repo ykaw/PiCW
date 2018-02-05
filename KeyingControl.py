@@ -15,6 +15,47 @@ RELEASED=1
 tx_enable  =True
 beep_enable=True
 
+
+#----[ Timing Chart of Sending Morse Codes  ]-----------------------------------------------------------------------------------------------------------
+#                                                                                                                                                      |
+#                                                                                                                                                      |
+# A dot                                                                                                                                                |
+#                                                                                                                                                      |
+#   Status |===MARK=====|   SPACE    |                                                                                                                 |
+# Duration |<- dotlen ->|<- dotlen ->|                                                                                                                 |
+# Function |......... dot() .........|                                                                                                                 |
+#                                                                                                                                                      |
+#                                                                                                                                                      |
+# A dash                                                                                                                                               |
+#                                                                                                                                                      |
+#   Status  |================MARK==================|   SPACE    |                                                                                      |
+# Duration  |<-------------- 3*dotlen ------------>|<- dotlen ->|                                                                                      |
+# Function  |.................... dash() .......................|                                                                                      |
+#                                                                                                                                                      |
+#                                                                                                                                                      |
+# A space between characters                                                                                                                           |
+#                                                                                                                                                      |
+#   Status  ===character MARK====|                SPACE                 |===character MARK====                                                         |
+# Duration  dotlen or 3*dotlen ->|<- dotlen ->|<------ cgap-dotlen ---->|<- dotlen or 3*dotlen                                                         |
+#                                |<------ cgap (cgaprate*dotlen) ------>|                                                                              |
+#                                |<--------- normally 3*dotlen -------->|                                                                              |
+# Function  ....................... txt.chars(ch) ......................|... txt.chars(ch) ....                                                        |
+#           ......... dot() or dash() ........|........ cspc() .........|... dot() or dash() ..                                                        |
+#                                                                                                                                                      |
+#                                                                                                                                                      |
+# A space between words                                                                                                                                |
+#                                                                                                                                                      |
+#   Status  ========word MARK====|                                          SPACE                                           |===word MARK=========     |
+# Duration  dotlen or 3*dotlen ->|<- dotlen ->|<------ cgap-dotlen ---->|<- wgap-dotlen-2*cgap -->|<------ cgap-dotlen ---->|<- dotlen or 3*dotlen     |
+#                                |<------ cgap (cgaprate*dotlen) ------>|                         |                         |                          |
+#                                |<--------------------------------- normally 7*dotlen ------------------------------------>|                          |
+# Function  ....................... txt.chars(ch) ......................|.................. txt.chars(' ') .................|... txt.chars(ch) ....    |
+#           ......... dot() or dash() ........|........ cspc() .........|..........wspc().........|........ cspc() .........|... dot() or dash() ..    |
+#                                                                                                                                                      |
+#                                                                                                                                                      |
+#-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 # convert wpm to duration of a dot (sec)
 #
 def wpm2sec(speed):
@@ -26,8 +67,7 @@ def wpm2sec(speed):
 #  - dots of bug keyer
 #
 def setspeed(speed):
-    import PaddleKeyer as pdl
-    global wpm, dotlen, cgap, wgap, cgap_rate
+    global wpm, dotlen, cgap, wgap, cgap_rate, sendable_dots
     if not speed:
         return # even speed is 0
 
@@ -37,7 +77,7 @@ def setspeed(speed):
         cgap=cgap_rate*dotlen
         wgap=7.0*cgap/3.0
         # max dots to send for fail-safe (60 sec)
-        pdl.maxdotslen=max(int(60/2/dotlen), 1)
+        sendable_dots=max(int(60/2/dotlen), 1)
 
 def getspeed():
     return wpm
@@ -102,14 +142,11 @@ def dash():
     sendspace(dotlen)
 
 # send space between characters
-#   dot/dash | gap(1) | cspc(2) | dot/dash
-#            |<-----3 dots----->|
+#
 def cspc():
     sendspace(cgap-dotlen)
 
 # output space between words
-#   dot/dash | gap(1) | cspc(2) | wspc(2) | cspc(2) | dot/dash
-#            |<---------------7 dots--------------->|
 #
 def wspc():
     sendspace(wgap+dotlen-cgap-cgap)
