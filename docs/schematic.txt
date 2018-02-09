@@ -30,20 +30,3 @@ Raspberry Pi
 All GPIO inputs are
 pulled up internally
 by software configuration.
-
-=====[Python Modules]===================================================
-
-PiCW.py                      - main program
-ConsoleCommands.py           - command line parser and its commands
-MemoryKeyer.py               - record and replay of keying
-TextKeyer.py                 - keying Morse code by text string
-PaddleKeyer.py               - handlings for paddles
-                              (iambic/bug/sideswiper)
-StraightKeyer.py             - handlings for straing key
-KeyingControl.py             - functions for keying Morse code
-InputOutputPort.py           - symlink to any GPIO library
-InputOutputPort_pigpio.py    - interface to pigpio GPIO library
-InputOutputPort_RPi_GPIO.py  - interface to RPi_GPIO library
-CwUtilities.py               - misc functions
-
-========================================================================

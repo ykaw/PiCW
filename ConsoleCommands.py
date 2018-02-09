@@ -536,26 +536,17 @@ class rlComplete():
             pass
 
         if state==0:
-            if readline.get_begidx()<=0:
-                # completing first word (command)
-                if text=='':
-                    self.matches=[name+' '
-                                  for name in self.cmdnames]
-                else:
-                    self.matches=[name+' '
-                                  for name in self.cmdnames
-                                  if name.startswith(text.upper())]
-            else:
+            if 0<readline.get_begidx():
                 # completing second word (parameter)
                 try:
                     if isinstance(self.cmds[cmd.upper()][ARG], list):
                         # select from prepared argument list
                         if text=='':
                             self.matches=[value
-                                          for value in self.cmds[cmd][ARG]]
+                                          for value in self.cmds[cmd.upper()][ARG]]
                         else:
                             self.matches=[value
-                                          for value in self.cmds[cmd][ARG]
+                                          for value in self.cmds[cmd.upper()][ARG]
                                           if value.startswith(text.upper())]
                     elif self.cmds[cmd.upper()][ARG]==ARG_FILE:
                         # get candidates of file path
@@ -564,6 +555,15 @@ class rlComplete():
                         self.matches=[]
                 except:
                     self.matches=[]
+            else:
+                # completing first word (command)
+                if text=='':
+                    self.matches=[name+' '
+                                  for name in self.cmdnames]
+                else:
+                    self.matches=[name+' '
+                                  for name in self.cmdnames
+                                  if name.startswith(text.upper())]
 
         try:
             retval=self.matches[state]

@@ -34,7 +34,10 @@ def speedstr():
     if speed_unit=='CPM':
         return "{:.1f}CPM".format(5.0*key.getspeed())
     elif speed_unit=='QRS':
-        return "{:.3f}QRS".format(key.dotlen)
+        if key.dotlen<1.0:
+            return "QRS{:.3f}".format(key.dotlen)
+        else:
+            return "QRS{:g}".format(key.dotlen)
     else:
         return "{:.1f}WPM".format(key.getspeed())
 
